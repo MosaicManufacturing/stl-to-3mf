@@ -1,44 +1,103 @@
 package main
 
 import (
-	"bufio"
+	"./ps3mf"
+	"./util"
+	"fmt"
 	"github.com/hpinc/go3mf"
-	"github.com/hpinc/go3mf/importer/stl"
 	"log"
 	"os"
+	"path/filepath"
 )
 
-func loadSTL(path string) (model *go3mf.Model, err error) {
-	model = new(go3mf.Model)
-	file, openErr := os.Open(path)
-	if openErr != nil {
-		err = openErr
-		return
-	}
-	defer func() {
-		if closeErr := file.Close(); closeErr != nil {
-			err = closeErr
+func help() {
+	fmt.Println("stl-to-3mf <models> outpath.3mf")
+	fmt.Println()
+	fmt.Println("  <models>: [--colors, colors.rle] [--supports supports.rle] matrix model1.stl [...]")
+}
+
+// stl-to-3mf outpath.3mf <models>
+//
+//   <models>: <model> [<model> [...]]
+//   <model>:  [--colors colors.rle] [--supports supports.rle] transforms model1.stl [...]
+
+type ModelOpts struct {
+	ColorsPath string
+	SupportsPath string
+	MeshPath string
+	Transforms util.Matrix4
+}
+
+type Opts struct {
+	Models []ModelOpts
+	OutPath string
+}
+
+func getOpts() Opts {
+	argv := os.Args[1:]
+	argc := len(argv)
+
+	opts := Opts{}
+
+	opts.OutPath = argv[0]
+	for i := 1; i < argc; {
+		modelOpts := ModelOpts{}
+		if argv[i] == "--colors" {
+			i++
+			modelOpts.ColorsPath = argv[i]
+			i++
 		}
-	}()
-	reader := bufio.NewReader(file)
-	decoder := stl.NewDecoder(reader)
-	if decodeErr := decoder.Decode(model); decodeErr != nil {
-		err = decodeErr
-		return
+		if argv[i] == "--supports" {
+			i++
+			modelOpts.SupportsPath = argv[i]
+			i++
+		}
+		mat, err := util.UnserializeMatrix4(argv[i])
+		if err != nil {
+			log.Fatalln(err)
+		}
+		modelOpts.Transforms = mat
+		i++
+		modelOpts.MeshPath = argv[i]
+		i++
+		opts.Models = append(opts.Models, modelOpts)
 	}
-	return
+	return opts
 }
 
 func main() {
-	model, err := loadSTL("/Users/brandonbloch/Downloads/cube.stl")
+	//opts := getOpts()
+
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stlPath := filepath.Join(dir, "test", "cube.stl")
+	colorsPath := filepath.Join(dir, "test", "colors.rle")
+	transforms1 := "2,0,0,0|0,2,0,0|0,0,2,0|0,0,0,1"
+	transforms2 := "1,0,0,0|0,1,0,0|0,0,1,0|50,60,70,1"
+
+	bundle := ps3mf.NewBundle()
+
+	model1, err := ps3mf.STLtoModel(stlPath, transforms1, colorsPath, "")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	writer, err := go3mf.CreateWriter("/Users/brandonbloch/Desktop/3mf.zip")
+	model2, err := ps3mf.STLtoModel(stlPath, transforms2, colorsPath, "")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if err := writer.Encode(model); err != nil {
+	bundle.AddModel(&model1)
+	bundle.AddModel(&model2)
+
+	// TODO: output writing
+
+	writer, err := go3mf.CreateWriter(filepath.Join(dir, "test", "output3mf.zip"))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if err := writer.Encode(bundle.Model); err != nil {
 		log.Fatalln(err)
 	}
 	if err := writer.Close(); err != nil {

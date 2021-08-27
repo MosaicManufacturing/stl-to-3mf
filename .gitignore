@@ -1,2 +1,4 @@
+.DS_Store
 .idea
 stl-to-3mf
+/test/*
