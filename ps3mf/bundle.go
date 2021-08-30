@@ -33,8 +33,6 @@ type Bundle struct {
 	BoundingBox util.BoundingBox
 
 	Config string
-	ModelConfig string
-	Thumbnail []byte
 }
 
 func NewBundle() Bundle {
@@ -43,8 +41,6 @@ func NewBundle() Bundle {
 		Colors:      make([]*util.RLE, 0),
 		Supports:    make([]*util.RLE, 0),
 		Config:      "",
-		ModelConfig: "",
-		Thumbnail:   make([]byte, 0),
 	}
 }
 
