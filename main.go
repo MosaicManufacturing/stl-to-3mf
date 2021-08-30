@@ -2,18 +2,10 @@ package main
 
 import (
 	"./ps3mf"
-	"./util"
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 )
-
-func help() {
-	fmt.Println("stl-to-3mf <models> outpath.3mf")
-	fmt.Println()
-	fmt.Println("  <models>: [--colors, colors.rle] [--supports supports.rle] matrix model1.stl [...]")
-}
 
 // stl-to-3mf outpath.3mf inpath.config <models>
 //
@@ -24,7 +16,7 @@ type ModelOpts struct {
 	ColorsPath string
 	SupportsPath string
 	MeshPath string
-	Transforms util.Matrix4
+	Transforms string // serialized util.Matrix4
 }
 
 type Opts struct {
@@ -53,11 +45,7 @@ func getOpts() Opts {
 			modelOpts.SupportsPath = argv[i]
 			i++
 		}
-		mat, err := util.UnserializeMatrix4(argv[i])
-		if err != nil {
-			log.Fatalln(err)
-		}
-		modelOpts.Transforms = mat
+		modelOpts.Transforms = argv[i]
 		i++
 		modelOpts.MeshPath = argv[i]
 		i++
@@ -66,50 +54,61 @@ func getOpts() Opts {
 	return opts
 }
 
+// todo: remove
+//func demo() {
+//	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	configPath := filepath.Join(dir, "test", "Slic3r_PE.config")
+//	outPath := filepath.Join(dir, "test", "output3mf.zip")
+//	stlPath := filepath.Join(dir, "test", "cube.stl")
+//	colorsPath := filepath.Join(dir, "test", "colors.rle")
+//	transforms1 := "2,0,0,0|0,2,0,0|0,0,2,0|0,0,0,1"
+//	transforms2 := "1,0,0,0|0,1,0,0|0,0,1,0|50,60,70,1"
+//
+//	bundle := ps3mf.NewBundle()
+//	if err := bundle.LoadConfig(configPath); err != nil {
+//		log.Fatalln(err)
+//	}
+//
+//	model1, err := ps3mf.STLtoModel(stlPath, transforms1, colorsPath, "")
+//	if err != nil {
+//		log.Fatalln(err)
+//	}
+//	model2, err := ps3mf.STLtoModel(stlPath, transforms2, colorsPath, "")
+//	if err != nil {
+//		log.Fatalln(err)
+//	}
+//	bundle.AddModel(&model1)
+//	bundle.AddModel(&model2)
+//	fmt.Println(bundle.BoundingBox.Serialize())
+//
+//	if err := bundle.Save(outPath); err != nil {
+//		log.Fatalln(err)
+//	}
+//}
+
 func main() {
-	//opts := getOpts()
-
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	configPath := filepath.Join(dir, "test", "Slic3r_PE.config")
-	outPath := filepath.Join(dir, "test", "output3mf.zip")
-	stlPath := filepath.Join(dir, "test", "cube.stl")
-	colorsPath := filepath.Join(dir, "test", "colors.rle")
-	transforms1 := "2,0,0,0|0,2,0,0|0,0,2,0|0,0,0,1"
-	transforms2 := "1,0,0,0|0,1,0,0|0,0,1,0|50,60,70,1"
+	//demo()
+	opts := getOpts()
 
 	bundle := ps3mf.NewBundle()
-	if err := bundle.LoadConfig(configPath); err != nil {
+	if err := bundle.LoadConfig(opts.ConfigPath); err != nil {
 		log.Fatalln(err)
 	}
 
-	model1, err := ps3mf.STLtoModel(stlPath, transforms1, colorsPath, "")
-	if err != nil {
+	for _, modelOpts := range opts.Models {
+		model, err := ps3mf.STLtoModel(modelOpts.MeshPath, modelOpts.Transforms, modelOpts.ColorsPath, modelOpts.SupportsPath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		bundle.AddModel(&model)
+	}
+
+	if err := bundle.Save(opts.OutPath); err != nil {
 		log.Fatalln(err)
 	}
-	model2, err := ps3mf.STLtoModel(stlPath, transforms2, colorsPath, "")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	bundle.AddModel(&model1)
-	bundle.AddModel(&model2)
 	fmt.Println(bundle.BoundingBox.Serialize())
-
-	if err := bundle.Save(outPath); err != nil {
-		log.Fatalln(err)
-	}
-
-	//writer, err := go3mf.CreateWriter(outPath)
-	//if err != nil {
-	//	log.Fatalln(err)
-	//}
-	//if err := writer.Encode(bundle.Model); err != nil {
-	//	log.Fatalln(err)
-	//}
-	//if err := writer.Close(); err != nil {
-	//	log.Fatalln(err)
-	//}
 }

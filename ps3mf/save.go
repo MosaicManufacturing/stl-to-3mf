@@ -259,7 +259,9 @@ func (m *Bundle) Save(path string) (err error) {
 		}
 	}
 
-	// TODO: generate and write Metadata/Slic3r_PE_model.config (optional?)
+	// TODO: generate and write Metadata/Slic3r_PE_model.config in the future
+	//  in order to support infill transitioning (purge_to_infill)
+	//  and model transitioning (purge_to_models)
 
 	closeErr := writer.Close()
 	if closeErr != nil {
