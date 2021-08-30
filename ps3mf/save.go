@@ -102,6 +102,28 @@ func (m *Mesh) AddColors(rle *util.RLE) {
 }
 
 func (m *Mesh) AddCustomSupports(rle *util.RLE) {
+	color := *rle
+	currentRunIndex := -1
+	currentRunLength := 0
+	currentSupported := 0
+
+	for triIdx := range m.Triangles {
+		if currentRunLength <= 0 {
+			if currentRunIndex < len(color) {
+				currentRunIndex++
+				currentRunLength = int(color[currentRunIndex].Length)
+				currentSupported = int(color[currentRunIndex].Value)
+			}
+		}
+		// enforce support (currentSupported == 1): "4"
+		// block support (currentSupported == 0): "8"
+		if currentSupported > 0 {
+			m.Triangles[triIdx].Segmentation = "4"
+		} else {
+			m.Triangles[triIdx].Segmentation = "8"
+		}
+		currentRunLength--
+	}
 }
 
 func (m *Bundle) Save(path string) (err error) {
