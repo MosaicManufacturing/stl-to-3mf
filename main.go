@@ -96,6 +96,7 @@ func main() {
 	}
 	bundle.AddModel(&model1)
 	bundle.AddModel(&model2)
+	fmt.Println(bundle.BoundingBox.Serialize())
 
 	if err := bundle.Save(outPath); err != nil {
 		log.Fatalln(err)

@@ -112,3 +112,12 @@ func STLtoModel(path, transforms, colorsPath, supportsPath string) (model Model,
 
 	return
 }
+
+func (m *Model) GetTransformedBbox() util.BoundingBox {
+	bbox := util.NewBoundingBox()
+	for _, vertex := range m.Model.Resources.Objects[0].Mesh.Vertices {
+		point := util.NewVector3(float64(vertex[0]), float64(vertex[1]), float64(vertex[2])).Transform(m.Transforms)
+		bbox.ExpandByPoint(point)
+	}
+	return bbox
+}
