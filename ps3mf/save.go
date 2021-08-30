@@ -8,7 +8,6 @@ import (
 	"github.com/hpinc/go3mf"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 )
 
@@ -156,13 +155,13 @@ func (m *Bundle) Save(path string) (err error) {
 	// write "vanilla" 3MF data to temp file
 	tempWriter, err := go3mf.CreateWriter(tmpFile.Name())
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	if err := tempWriter.Encode(m.Model); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	if err := tempWriter.Close(); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	// read 3MF data as a zip
@@ -177,7 +176,7 @@ func (m *Bundle) Save(path string) (err error) {
 	// open a zip writer for writing at the output path
 	zipFile, createErr := os.Create(path)
 	if createErr != nil {
-		log.Fatalln(err)
+		return err
 	}
 	defer func() {
 		err = zipFile.Close()
@@ -187,7 +186,7 @@ func (m *Bundle) Save(path string) (err error) {
 	for _, file := range reader.File {
 		fileWriter, writerErr := writer.Create(file.Name)
 		if writerErr != nil {
-			log.Fatalln(writerErr)
+			return writerErr
 		}
 		if file.Name == "3D/3dmodel.model" {
 			var model ModelXML
@@ -200,7 +199,7 @@ func (m *Bundle) Save(path string) (err error) {
 			defer func() {
 				closeErr := readCloser.Close()
 				if closeErr != nil {
-					log.Fatalln(err)
+					err = closeErr
 				}
 			}()
 			fileBytes, readErr := ioutil.ReadAll(readCloser)
@@ -235,16 +234,16 @@ func (m *Bundle) Save(path string) (err error) {
 			}
 
 			if _, writeErr := io.WriteString(fileWriter, string(output)); writeErr != nil {
-				log.Fatalln(writeErr)
+				return writeErr
 			}
 		} else {
 			// copy file to new zip at same path
 			openedFile, openErr := file.Open()
 			if openErr != nil {
-				log.Fatalln(openErr)
+				return openErr
 			}
 			if _, copyErr := io.Copy(fileWriter, openedFile); copyErr != nil {
-				log.Fatalln(err)
+				return copyErr
 			}
 		}
 	}
@@ -253,10 +252,10 @@ func (m *Bundle) Save(path string) (err error) {
 	if len(m.Config) > 0 {
 		fileWriter, writerErr := writer.Create("Metadata/Slic3r_PE.config")
 		if writerErr != nil {
-			log.Fatalln(writerErr)
+			return writerErr
 		}
 		if _, writeErr := io.WriteString(fileWriter, m.Config); writeErr != nil {
-			log.Fatalln(writeErr)
+			return writeErr
 		}
 	}
 
@@ -264,7 +263,7 @@ func (m *Bundle) Save(path string) (err error) {
 
 	closeErr := writer.Close()
 	if closeErr != nil {
-		log.Fatalln(closeErr)
+		return closeErr
 	}
 
 	return
