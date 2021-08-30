@@ -4,7 +4,6 @@ import (
 	"./ps3mf"
 	"./util"
 	"fmt"
-	"github.com/hpinc/go3mf"
 	"log"
 	"os"
 	"path/filepath"
@@ -73,6 +72,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	outPath := filepath.Join(dir, "test", "output3mf.zip")
 	stlPath := filepath.Join(dir, "test", "cube.stl")
 	colorsPath := filepath.Join(dir, "test", "colors.rle")
 	transforms1 := "2,0,0,0|0,2,0,0|0,0,2,0|0,0,0,1"
@@ -90,17 +90,20 @@ func main() {
 	}
 	bundle.AddModel(&model1)
 	bundle.AddModel(&model2)
+	fmt.Println("2 models added")
 
-	// TODO: output writing
+	if err := bundle.Save(outPath); err != nil {
+		log.Fatalln(err)
+	}
 
-	writer, err := go3mf.CreateWriter(filepath.Join(dir, "test", "output3mf.zip"))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	if err := writer.Encode(bundle.Model); err != nil {
-		log.Fatalln(err)
-	}
-	if err := writer.Close(); err != nil {
-		log.Fatalln(err)
-	}
+	//writer, err := go3mf.CreateWriter(outPath)
+	//if err != nil {
+	//	log.Fatalln(err)
+	//}
+	//if err := writer.Encode(bundle.Model); err != nil {
+	//	log.Fatalln(err)
+	//}
+	//if err := writer.Close(); err != nil {
+	//	log.Fatalln(err)
+	//}
 }
