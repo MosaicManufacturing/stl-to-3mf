@@ -50,7 +50,6 @@ func addDefaultMetadata(model *go3mf.Model) {
 	model.Language = "en-US"
 	model.AnyAttr = append(model.AnyAttr, getSlicerPENamespace())
 	model.Metadata = append(model.Metadata, getMetadataElement("slic3rpe:Version3mf", "1"))
-	model.Metadata = append(model.Metadata, getMetadataElement("Title", "model")) // TODO: use real filename?
 	model.Metadata = append(model.Metadata, getMetadataElement("Application", "Canvas"))
 	//model.Resources.Objects[0].Type = go3mf.ObjectTypeModel
 }

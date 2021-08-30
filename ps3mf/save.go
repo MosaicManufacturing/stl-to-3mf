@@ -18,6 +18,7 @@ type ModelXML struct {
 	Namespace string `xml:"xmlns,attr"`
 	Slic3rNamespace string `xml:"xmlns:slic3rpe,attr"`
 	// TODO: fix metadata inclusion issues (use slice of generic metadata items?)
+	//Metadata []Meta `xml:"metadata"`
 	//Version struct{
 	//	XMLName xml.Name `xml:"metadata"`
 	//	Name string `xml:"name,attr"`
@@ -29,6 +30,12 @@ type ModelXML struct {
 	Resources []Resource `xml:"resources>object"`
 	Build []BuildItem `xml:"build>item"`
 }
+
+//type Meta struct {
+//	XMLName xml.Name `xml:"metadata"`
+//	Name string `xml:"name,attr"`
+//	Value string `xml:"value,innerxml"`
+//}
 
 type Resource struct {
 	XMLName xml.Name `xml:"object"`

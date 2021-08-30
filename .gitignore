@@ -1,4 +1,5 @@
 .DS_Store
 .idea
 stl-to-3mf
-/test/*
+/test/output3mf.zip
+/demo/demo
