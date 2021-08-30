@@ -1,8 +1,10 @@
 package ps3mf
 
 import (
+	"../util"
 	"archive/zip"
 	"encoding/xml"
+	"fmt"
 	"github.com/hpinc/go3mf"
 	"io"
 	"io/ioutil"
@@ -63,6 +65,43 @@ type BuildItem struct {
 	ObjectId string `xml:"objectid,attr"`
 	Transform string `xml:"transform,attr,omitempty"`
 	Printable string `xml:"printable,attr,omitempty"`
+}
+
+func (m *Mesh) AddColors(rle *util.RLE) {
+	color := *rle
+	currentRunIndex := -1
+	currentRunLength := 0
+	currentColor := 0
+
+	for triIdx := range m.Triangles {
+		if currentRunLength <= 0 {
+			if currentRunIndex < len(color) {
+				currentRunIndex++
+				currentRunLength = int(color[currentRunIndex].Length)
+				currentColor = int(color[currentRunIndex].Value)
+			}
+		}
+		if currentColor != 0 {
+			// extruder 1: "4"
+			// extruder 2: "8"
+			// extruder 3: "0C"
+			// extruder 4: "1C"
+			// extruder 5: "2C"
+			// ...
+			switch currentColor {
+			case 1:
+				m.Triangles[triIdx].Segmentation = "4"
+			case 2:
+				m.Triangles[triIdx].Segmentation = "8"
+			default:
+				m.Triangles[triIdx].Segmentation = fmt.Sprintf("%dC", currentColor - 3)
+			}
+		}
+		currentRunLength--
+	}
+}
+
+func (m *Mesh) AddCustomSupports(rle *util.RLE) {
 }
 
 func (m *Bundle) Save(path string) (err error) {
@@ -156,8 +195,17 @@ func (m *Bundle) Save(path string) (err error) {
 			model.Language = "en-US"
 			model.Slic3rNamespace = slic3rPENamespace
 
-			// TODO: add custom supports/color data here
+			// add custom color and/or support data, if available
+			for idx := range model.Resources {
+				if m.Colors[idx] != nil {
+					model.Resources[idx].Mesh.AddColors(m.Colors[idx])
+				}
+				if m.Supports[idx] != nil {
+					model.Resources[idx].Mesh.AddCustomSupports(m.Supports[idx])
+				}
+			}
 
+			// write modified content into final zip
 			output, marshalErr := xml.Marshal(model)
 			if marshalErr != nil {
 				err = marshalErr
