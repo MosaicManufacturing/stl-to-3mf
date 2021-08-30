@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"github.com/hpinc/go3mf"
 	"github.com/hpinc/go3mf/spec"
+	"io/ioutil"
 )
 
 // structure of PrusaSlicer 3MF file:
@@ -44,6 +45,15 @@ func NewBundle() Bundle {
 		ModelConfig: "",
 		Thumbnail:   make([]byte, 0),
 	}
+}
+
+func (m *Bundle) LoadConfig(path string) error {
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	m.Config = string(bytes)
+	return nil
 }
 
 type printableAttr struct {

@@ -33,8 +33,10 @@ func (n xmlns) Marshal3MFAttr(spec.Encoder) ([]xml.Attr, error) {
 	}, nil
 }
 
+const slic3rPENamespace = "http://schemas.slic3r.org/3mf/2017/06"
+
 func getSlicerPENamespace() spec.MarshalerAttr {
-	return xmlns{"http://schemas.slic3r.org/3mf/2017/06"}
+	return xmlns{slic3rPENamespace}
 }
 
 func getMetadataElement(name, value string) go3mf.Metadata {

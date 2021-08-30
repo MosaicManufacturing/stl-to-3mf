@@ -15,7 +15,7 @@ func help() {
 	fmt.Println("  <models>: [--colors, colors.rle] [--supports supports.rle] matrix model1.stl [...]")
 }
 
-// stl-to-3mf outpath.3mf <models>
+// stl-to-3mf outpath.3mf inpath.config <models>
 //
 //   <models>: <model> [<model> [...]]
 //   <model>:  [--colors colors.rle] [--supports supports.rle] transforms model1.stl [...]
@@ -30,6 +30,7 @@ type ModelOpts struct {
 type Opts struct {
 	Models []ModelOpts
 	OutPath string
+	ConfigPath string
 }
 
 func getOpts() Opts {
@@ -39,7 +40,8 @@ func getOpts() Opts {
 	opts := Opts{}
 
 	opts.OutPath = argv[0]
-	for i := 1; i < argc; {
+	opts.ConfigPath = argv[1]
+	for i := 2; i < argc; {
 		modelOpts := ModelOpts{}
 		if argv[i] == "--colors" {
 			i++
@@ -72,6 +74,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	configPath := filepath.Join(dir, "test", "Slic3r_PE.config")
 	outPath := filepath.Join(dir, "test", "output3mf.zip")
 	stlPath := filepath.Join(dir, "test", "cube.stl")
 	colorsPath := filepath.Join(dir, "test", "colors.rle")
@@ -79,6 +82,9 @@ func main() {
 	transforms2 := "1,0,0,0|0,1,0,0|0,0,1,0|50,60,70,1"
 
 	bundle := ps3mf.NewBundle()
+	if err := bundle.LoadConfig(configPath); err != nil {
+		log.Fatalln(err)
+	}
 
 	model1, err := ps3mf.STLtoModel(stlPath, transforms1, colorsPath, "")
 	if err != nil {
@@ -90,7 +96,6 @@ func main() {
 	}
 	bundle.AddModel(&model1)
 	bundle.AddModel(&model2)
-	fmt.Println("2 models added")
 
 	if err := bundle.Save(outPath); err != nil {
 		log.Fatalln(err)

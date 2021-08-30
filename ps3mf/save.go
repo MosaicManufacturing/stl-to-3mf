@@ -3,7 +3,6 @@ package ps3mf
 import (
 	"archive/zip"
 	"encoding/xml"
-	"fmt"
 	"github.com/hpinc/go3mf"
 	"io"
 	"io/ioutil"
@@ -17,6 +16,7 @@ type ModelXML struct {
 	Language string `xml:"xml:lang,attr"`
 	Namespace string `xml:"xmlns,attr"`
 	Slic3rNamespace string `xml:"xmlns:slic3rpe,attr"`
+	// TODO: fix metadata inclusion issues (use slice of generic metadata items?)
 	//Version struct{
 	//	XMLName xml.Name `xml:"metadata"`
 	//	Name string `xml:"name,attr"`
@@ -55,6 +55,7 @@ type Triangle struct {
 	V2 string `xml:"v2,attr"`
 	V3 string `xml:"v3,attr"`
 	Segmentation string `xml:"slic3rpe:mmu_segmentation,attr,omitempty"`
+	CustomSupports string `xml:"slic3rpe:custom_supports,attr,omitempty"`
 }
 
 type BuildItem struct {
@@ -128,10 +129,8 @@ func (m *Bundle) Save(path string) (err error) {
 			log.Fatalln(writerErr)
 		}
 		if file.Name == "3D/3dmodel.model" {
-			fmt.Printf("File: %s\n", file.Name)
 			var model ModelXML
 			// read file and parse XML into struct
-			fmt.Println("open")
 			readCloser, openErr := file.Open()
 			if openErr != nil {
 				err = openErr
@@ -143,27 +142,22 @@ func (m *Bundle) Save(path string) (err error) {
 					log.Fatalln(err)
 				}
 			}()
-			fmt.Println("read")
 			fileBytes, readErr := ioutil.ReadAll(readCloser)
 			if readErr != nil {
 				err = readErr
 				return
 			}
-			fmt.Println("unmarshal")
 			unmarshalErr := xml.Unmarshal(fileBytes, &model)
 			if unmarshalErr != nil {
-				fmt.Println("not nil?")
-				fmt.Println(err)
 				err = unmarshalErr
 				return
 			}
 
 			model.Language = "en-US"
-			model.Slic3rNamespace = "http://schemas.slic3r.org/3mf/2017/06"
+			model.Slic3rNamespace = slic3rPENamespace
 
 			// TODO: add custom supports/color data here
 
-			fmt.Println("marshal")
 			output, marshalErr := xml.Marshal(model)
 			if marshalErr != nil {
 				err = marshalErr
@@ -185,7 +179,16 @@ func (m *Bundle) Save(path string) (err error) {
 		}
 	}
 
-	// TODO: copy in Metadata/Slic3r_PE.config
+	// copy in Metadata/Slic3r_PE.config
+	if len(m.Config) > 0 {
+		fileWriter, writerErr := writer.Create("Metadata/Slic3r_PE.config")
+		if writerErr != nil {
+			log.Fatalln(writerErr)
+		}
+		if _, writeErr := io.WriteString(fileWriter, m.Config); writeErr != nil {
+			log.Fatalln(writeErr)
+		}
+	}
 
 	// TODO: generate and write Metadata/Slic3r_PE_model.config (optional?)
 
