@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/hpinc/go3mf"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -91,18 +92,16 @@ func (m *Bundle) Save(path string) (err error) {
 	}
 
 	// write "vanilla" 3MF data to temp file
-	writer, err := go3mf.CreateWriter(tmpFile.Name())
+	tempWriter, err := go3mf.CreateWriter(tmpFile.Name())
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if err := writer.Encode(m.Model); err != nil {
+	if err := tempWriter.Encode(m.Model); err != nil {
 		log.Fatalln(err)
 	}
-	if err := writer.Close(); err != nil {
+	if err := tempWriter.Close(); err != nil {
 		log.Fatalln(err)
 	}
-
-	// TODO: open a final zip for writing at the output path
 
 	// read 3MF data as a zip
 	reader, err := zip.OpenReader(tmpFile.Name())
@@ -113,7 +112,21 @@ func (m *Bundle) Save(path string) (err error) {
 		err = reader.Close()
 	}()
 
+	// open a zip writer for writing at the output path
+	zipFile, createErr := os.Create(path)
+	if createErr != nil {
+		log.Fatalln(err)
+	}
+	defer func() {
+		err = zipFile.Close()
+	}()
+	writer := zip.NewWriter(zipFile)
+
 	for _, file := range reader.File {
+		fileWriter, writerErr := writer.Create(file.Name)
+		if writerErr != nil {
+			log.Fatalln(writerErr)
+		}
 		if file.Name == "3D/3dmodel.model" {
 			fmt.Printf("File: %s\n", file.Name)
 			var model ModelXML
@@ -124,6 +137,12 @@ func (m *Bundle) Save(path string) (err error) {
 				err = openErr
 				return
 			}
+			defer func() {
+				closeErr := readCloser.Close()
+				if closeErr != nil {
+					log.Fatalln(err)
+				}
+			}()
 			fmt.Println("read")
 			fileBytes, readErr := ioutil.ReadAll(readCloser)
 			if readErr != nil {
@@ -142,6 +161,8 @@ func (m *Bundle) Save(path string) (err error) {
 			model.Language = "en-US"
 			model.Slic3rNamespace = "http://schemas.slic3r.org/3mf/2017/06"
 
+			// TODO: add custom supports/color data here
+
 			fmt.Println("marshal")
 			output, marshalErr := xml.Marshal(model)
 			if marshalErr != nil {
@@ -149,37 +170,29 @@ func (m *Bundle) Save(path string) (err error) {
 				return
 			}
 
-			fmt.Println("print")
-			fmt.Println(string(output))
-
-			// TODO:
-			//  1. parse file content as XML
-			//  2. add in custom data
-			//  3. convert XML to string
-			//  4. write to new zip
+			if _, writeErr := io.WriteString(fileWriter, string(output)); writeErr != nil {
+				log.Fatalln(writeErr)
+			}
 		} else {
-			// TODO: copy file to new zip at same path
+			// copy file to new zip at same path
+			openedFile, openErr := file.Open()
+			if openErr != nil {
+				log.Fatalln(openErr)
+			}
+			if _, copyErr := io.Copy(fileWriter, openedFile); copyErr != nil {
+				log.Fatalln(err)
+			}
 		}
-
-		// TODO: test code, remove
-		//readCloser, openErr := file.Open()
-		//if openErr != nil {
-		//	err = openErr
-		//	return
-		//}
-		//buf := new(bytes.Buffer)
-		//_, readErr := buf.ReadFrom(readCloser)
-		//if readErr != nil {
-		//	err = readErr
-		//	return
-		//}
-		//fmt.Println(buf.String())
-		//fmt.Println()
 	}
 
 	// TODO: copy in Metadata/Slic3r_PE.config
 
-	// TODO: generate and write Metadata/Slic3r_PE_model.config
+	// TODO: generate and write Metadata/Slic3r_PE_model.config (optional?)
+
+	closeErr := writer.Close()
+	if closeErr != nil {
+		log.Fatalln(closeErr)
+	}
 
 	return
 }
