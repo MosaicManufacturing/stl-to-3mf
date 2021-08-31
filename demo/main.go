@@ -26,11 +26,23 @@ func demo() {
 		log.Fatalln(err)
 	}
 
-	model1, err := ps3mf.STLtoModel(stlPath, transforms1, colorsPath, "")
+	model1, err := ps3mf.STLtoModel(ps3mf.ModelOpts{
+		ColorsPath:   colorsPath,
+		SupportsPath: "",
+		MeshPath:     stlPath,
+		Transforms:   transforms1,
+		Extruder:     "1",
+	})
 	if err != nil {
 		log.Fatalln(err)
 	}
-	model2, err := ps3mf.STLtoModel(stlPath, transforms2, colorsPath, "")
+	model2, err := ps3mf.STLtoModel(ps3mf.ModelOpts{
+		ColorsPath:   colorsPath,
+		SupportsPath: "",
+		MeshPath:     stlPath,
+		Transforms:   transforms2,
+		Extruder:     "1",
+	})
 	if err != nil {
 		log.Fatalln(err)
 	}
