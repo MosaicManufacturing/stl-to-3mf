@@ -98,7 +98,7 @@ func STLtoModel(path, transforms, colorsPath, supportsPath string) (model Model,
 			err = colorsErr
 			return
 		}
-		model.Colors = &colors
+		model.Colors = colors
 	}
 	if supportsPath != "" {
 		supports, supportsErr := util.LoadRLE(supportsPath)
@@ -106,7 +106,7 @@ func STLtoModel(path, transforms, colorsPath, supportsPath string) (model Model,
 			err = supportsErr
 			return
 		}
-		model.Supports = &supports
+		model.Supports = supports
 	}
 
 	return

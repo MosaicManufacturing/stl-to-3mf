@@ -81,10 +81,10 @@ func (m *Mesh) AddColors(rle *util.RLE) {
 
 	for triIdx := range m.Triangles {
 		if currentRunLength <= 0 {
-			if currentRunIndex < len(color) {
+			if currentRunIndex < len(color.Runs) {
 				currentRunIndex++
-				currentRunLength = int(color[currentRunIndex].Length)
-				currentColor = int(color[currentRunIndex].Value)
+				currentRunLength = int(color.Runs[currentRunIndex].Length)
+				currentColor = int(color.Runs[currentRunIndex].Value)
 			}
 		}
 		if currentColor != 0 {
@@ -115,10 +115,10 @@ func (m *Mesh) AddCustomSupports(rle *util.RLE) {
 
 	for triIdx := range m.Triangles {
 		if currentRunLength <= 0 {
-			if currentRunIndex < len(color) {
+			if currentRunIndex < len(color.Runs) {
 				currentRunIndex++
-				currentRunLength = int(color[currentRunIndex].Length)
-				currentSupported = int(color[currentRunIndex].Value)
+				currentRunLength = int(color.Runs[currentRunIndex].Length)
+				currentSupported = int(color.Runs[currentRunIndex].Value)
 			}
 		}
 		// enforce support (currentSupported == 1): "4"

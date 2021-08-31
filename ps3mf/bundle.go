@@ -86,7 +86,7 @@ func (m *Bundle) AddModel(model *Model) {
 	m.Model.Resources.Objects = append(m.Model.Resources.Objects, model.Model.Resources.Objects[0])
 	m.Model.Build.Items = append(m.Model.Build.Items, model.Model.Build.Items[0])
 	m.Colors = append(m.Colors, model.Colors)
-	m.Supports = append(m.Colors, model.Supports)
+	m.Supports = append(m.Supports, model.Supports)
 
 	m.BoundingBox.ExpandByBox(model.GetTransformedBbox())
 }

@@ -10,19 +10,21 @@ type Run struct {
 	Value uint8
 }
 
-type RLE []Run
+type RLE struct {
+	Runs []Run
+}
 
-func LoadRLE(path string) (RLE, error) {
+func LoadRLE(path string) (*RLE, error) {
 	rleBytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	rle := make(RLE, 0)
+	rle := new(RLE)
 	for i := 0; i < len(rleBytes); i += 5 {
 		runLength := binary.LittleEndian.Uint32(rleBytes[i:])
 		value := rleBytes[i + 4]
-		rle = append(rle, Run{
+		rle.Runs = append(rle.Runs, Run{
 			Length:  runLength,
 			Value: value,
 		})
