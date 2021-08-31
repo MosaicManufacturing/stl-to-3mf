@@ -296,9 +296,22 @@ func (m *Bundle) Save(path string) (err error) {
 		}
 	}
 
-	// TODO: generate and write Metadata/Slic3r_PE_model.config in the future
-	//  in order to support infill transitioning (purge_to_infill)
-	//  and model transitioning (purge_to_models)
+	// generate and write in Metadata/Slic3r_PE_model.config
+	modelConfig := m.GetModelConfig()
+	output, marshalErr := xml.Marshal(modelConfig)
+	if marshalErr != nil {
+		err = marshalErr
+		return
+	}
+	fileWriter, writerErr := writer.Create("Metadata/Slic3r_PE_model.config")
+	if writerErr != nil {
+		err = writerErr
+		return
+	}
+	if _, writeErr := io.WriteString(fileWriter, string(output)); writeErr != nil {
+		err = writeErr
+		return
+	}
 
 	closeErr := writer.Close()
 	if closeErr != nil {

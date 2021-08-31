@@ -10,17 +10,10 @@ import (
 // stl-to-3mf outpath.3mf inpath.config <models>
 //
 //   <models>: <model> [<model> [...]]
-//   <model>:  [--colors colors.rle] [--supports supports.rle] transforms model1.stl [...]
-
-type ModelOpts struct {
-	ColorsPath string
-	SupportsPath string
-	MeshPath string
-	Transforms string // serialized util.Matrix4
-}
+//   <model>:  [--colors colors.rle] [--supports supports.rle] transforms extruder model1.stl [...]
 
 type Opts struct {
-	Models []ModelOpts
+	Models []ps3mf.ModelOpts
 	OutPath string
 	ConfigPath string
 }
@@ -34,7 +27,7 @@ func getOpts() Opts {
 	opts.OutPath = argv[0]
 	opts.ConfigPath = argv[1]
 	for i := 2; i < argc; {
-		modelOpts := ModelOpts{}
+		modelOpts := ps3mf.ModelOpts{}
 		if argv[i] == "--colors" {
 			i++
 			modelOpts.ColorsPath = argv[i]
@@ -46,6 +39,8 @@ func getOpts() Opts {
 			i++
 		}
 		modelOpts.Transforms = argv[i]
+		i++
+		modelOpts.Extruder = argv[i]
 		i++
 		modelOpts.MeshPath = argv[i]
 		i++
@@ -63,7 +58,7 @@ func run() {
 	}
 
 	for _, modelOpts := range opts.Models {
-		model, err := ps3mf.STLtoModel(modelOpts.MeshPath, modelOpts.Transforms, modelOpts.ColorsPath, modelOpts.SupportsPath)
+		model, err := ps3mf.STLtoModel(modelOpts)
 		if err != nil {
 			log.Fatalln(err)
 		}

@@ -30,6 +30,7 @@ type Bundle struct {
 	Model *go3mf.Model
 	Colors []*util.RLE // nil for objects with no data
 	Supports []*util.RLE // nil for objects with no data
+	Extruders []string // 1-indexed ints
 	BoundingBox util.BoundingBox
 
 	Config string
@@ -87,6 +88,7 @@ func (m *Bundle) AddModel(model *Model) {
 	m.Model.Build.Items = append(m.Model.Build.Items, model.Model.Build.Items[0])
 	m.Colors = append(m.Colors, model.Colors)
 	m.Supports = append(m.Supports, model.Supports)
+	m.Extruders = append(m.Extruders, model.Extruder)
 
 	m.BoundingBox.ExpandByBox(model.GetTransformedBbox())
 }

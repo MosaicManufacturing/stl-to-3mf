@@ -10,11 +10,20 @@ import (
 	"os"
 )
 
+type ModelOpts struct {
+	ColorsPath string
+	SupportsPath string
+	MeshPath string
+	Transforms string // serialized util.Matrix4
+	Extruder string // 1-indexed
+}
+
 type Model struct {
 	Model *go3mf.Model
 	Transforms util.Matrix4
 	Colors *util.RLE
 	Supports *util.RLE
+	Extruder string
 }
 
 type xmlns struct {
@@ -51,19 +60,19 @@ func addDefaultMetadata(model *go3mf.Model) {
 	model.AnyAttr = append(model.AnyAttr, getSlicerPENamespace())
 	model.Metadata = append(model.Metadata, getMetadataElement("slic3rpe:Version3mf", "1"))
 	model.Metadata = append(model.Metadata, getMetadataElement("Application", "Canvas"))
-	//model.Resources.Objects[0].Type = go3mf.ObjectTypeModel
 }
 
-func STLtoModel(path, transforms, colorsPath, supportsPath string) (model Model, err error) {
+func STLtoModel(opts ModelOpts) (model Model, err error) {
 	model = Model{
 		Model:      new(go3mf.Model),
 		Transforms: util.Matrix4{},
 		Colors:     nil,
 		Supports:   nil,
+		Extruder:   opts.Extruder,
 	}
 
 	// load the STL file using 3MF conversion
-	file, openErr := os.Open(path)
+	file, openErr := os.Open(opts.MeshPath)
 	if openErr != nil {
 		err = openErr
 		return
@@ -84,7 +93,7 @@ func STLtoModel(path, transforms, colorsPath, supportsPath string) (model Model,
 	addDefaultMetadata(model.Model)
 
 	// decode transforms matrix
-	matrix, matrixErr := util.UnserializeMatrix4(transforms)
+	matrix, matrixErr := util.UnserializeMatrix4(opts.Transforms)
 	if matrixErr != nil {
 		err = matrixErr
 		return
@@ -92,16 +101,16 @@ func STLtoModel(path, transforms, colorsPath, supportsPath string) (model Model,
 	model.Transforms = matrix
 
 	// load RLE data
-	if colorsPath != "" {
-		colors, colorsErr := util.LoadRLE(colorsPath)
+	if opts.ColorsPath != "" {
+		colors, colorsErr := util.LoadRLE(opts.ColorsPath)
 		if colorsErr != nil {
 			err = colorsErr
 			return
 		}
 		model.Colors = colors
 	}
-	if supportsPath != "" {
-		supports, supportsErr := util.LoadRLE(supportsPath)
+	if opts.SupportsPath != "" {
+		supports, supportsErr := util.LoadRLE(opts.SupportsPath)
 		if supportsErr != nil {
 			err = supportsErr
 			return
