@@ -143,13 +143,17 @@ func (m *Bundle) Save(path string) (err error) {
 	// 3. save modified zip back to real path
 
 	// get a temporary file path
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "stl-to-3mf-")
-	if err != nil {
+	tmpFile, tmpErr := ioutil.TempFile(os.TempDir(), "stl-to-3mf-")
+	if tmpErr != nil {
+		err = tmpErr
 		return
 	}
 	// clean up the temp file after we're done with it
 	defer func() {
-		err = os.Remove(tmpFile.Name())
+		removeErr := os.Remove(tmpFile.Name())
+		if removeErr != nil {
+			err = removeErr
+		}
 	}()
 
 	// close the file now so go3mf can create its own reference
@@ -158,40 +162,50 @@ func (m *Bundle) Save(path string) (err error) {
 	}
 
 	// write "vanilla" 3MF data to temp file
-	tempWriter, err := go3mf.CreateWriter(tmpFile.Name())
-	if err != nil {
-		return err
+	tempWriter, writerErr := go3mf.CreateWriter(tmpFile.Name())
+	if writerErr != nil {
+		err = writerErr
+		return
 	}
-	if err := tempWriter.Encode(m.Model); err != nil {
-		return err
+	if err = tempWriter.Encode(m.Model); err != nil {
+		return
 	}
-	if err := tempWriter.Close(); err != nil {
-		return err
+	if err = tempWriter.Close(); err != nil {
+		return
 	}
 
 	// read 3MF data as a zip
-	reader, err := zip.OpenReader(tmpFile.Name())
-	if err != nil {
+	reader, readerErr := zip.OpenReader(tmpFile.Name())
+	if readerErr != nil {
+		err = readerErr
 		return
 	}
 	defer func() {
-		err = reader.Close()
+		closeErr := reader.Close()
+		if closeErr != nil {
+			err = closeErr
+		}
 	}()
 
 	// open a zip writer for writing at the output path
 	zipFile, createErr := os.Create(path)
 	if createErr != nil {
-		return err
+		err = createErr
+		return
 	}
 	defer func() {
-		err = zipFile.Close()
+		closeErr := zipFile.Close()
+		if closeErr != nil {
+			err = closeErr
+		}
 	}()
 	writer := zip.NewWriter(zipFile)
 
 	for _, file := range reader.File {
 		fileWriter, writerErr := writer.Create(file.Name)
 		if writerErr != nil {
-			return writerErr
+			err = writerErr
+			return
 		}
 		if file.Name == "3D/3dmodel.model" {
 			var model ModelXML
@@ -239,16 +253,19 @@ func (m *Bundle) Save(path string) (err error) {
 			}
 
 			if _, writeErr := io.WriteString(fileWriter, string(output)); writeErr != nil {
-				return writeErr
+				err = writeErr
+				return
 			}
 		} else {
 			// copy file to new zip at same path
 			openedFile, openErr := file.Open()
 			if openErr != nil {
-				return openErr
+				err = openErr
+				return
 			}
 			if _, copyErr := io.Copy(fileWriter, openedFile); copyErr != nil {
-				return copyErr
+				err = copyErr
+				return
 			}
 		}
 	}
@@ -257,10 +274,12 @@ func (m *Bundle) Save(path string) (err error) {
 	if len(m.Config) > 0 {
 		fileWriter, writerErr := writer.Create("Metadata/Slic3r_PE.config")
 		if writerErr != nil {
-			return writerErr
+			err = writerErr
+			return
 		}
 		if _, writeErr := io.WriteString(fileWriter, m.Config); writeErr != nil {
-			return writeErr
+			err = writeErr
+			return
 		}
 	}
 
@@ -270,8 +289,7 @@ func (m *Bundle) Save(path string) (err error) {
 
 	closeErr := writer.Close()
 	if closeErr != nil {
-		return closeErr
+		err = closeErr
 	}
-
 	return
 }
