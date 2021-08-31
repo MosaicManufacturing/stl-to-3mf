@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 type ModelXML struct {
@@ -17,25 +18,16 @@ type ModelXML struct {
 	Language string `xml:"xml:lang,attr"`
 	Namespace string `xml:"xmlns,attr"`
 	Slic3rNamespace string `xml:"xmlns:slic3rpe,attr"`
-	// TODO: fix metadata inclusion issues (use slice of generic metadata items?)
-	//Metadata []Meta `xml:"metadata"`
-	//Version struct{
-	//	XMLName xml.Name `xml:"metadata"`
-	//	Name string `xml:"name,attr"`
-	//} `xml:"metadata"`
-	//Title struct{
-	//	XMLName xml.Name `xml:"metadata"`
-	//	Name string `xml:"title,attr"`
-	//} `xml:"metadata,any"`
+	Metadata []Meta `xml:"metadata"`
 	Resources []Resource `xml:"resources>object"`
 	Build []BuildItem `xml:"build>item"`
 }
 
-//type Meta struct {
-//	XMLName xml.Name `xml:"metadata"`
-//	Name string `xml:"name,attr"`
-//	Value string `xml:"value,innerxml"`
-//}
+type Meta struct {
+	XMLName xml.Name `xml:"metadata"`
+	Name string `xml:"name,attr"`
+	Value string `xml:",innerxml"`
+}
 
 type Resource struct {
 	XMLName xml.Name `xml:"object"`
@@ -127,6 +119,13 @@ func (m *Mesh) AddCustomSupports(rle *util.RLE) {
 			m.Triangles[triIdx].CustomSupports = "4"
 		}
 		currentRunLength--
+	}
+}
+
+func GetMeta(name, value string) Meta {
+	return Meta{
+		Name: name,
+		Value: value,
 	}
 }
 
@@ -234,6 +233,20 @@ func (m *Bundle) Save(path string) (err error) {
 
 			model.Language = "en-US"
 			model.Slic3rNamespace = slic3rPENamespace
+			currentDate := time.Now().Format("2006-01-02") // YYYY-MM-DD
+			model.Metadata = append(
+				model.Metadata,
+				GetMeta("slic3rpe:Version3mf", "1"),
+				GetMeta("Title", "Project"),
+				GetMeta("Designer", ""),
+				GetMeta("Description", ""),
+				GetMeta("Copyright", ""),
+				GetMeta("LicenseTerms", ""),
+				GetMeta("Rating", ""),
+				GetMeta("CreationDate", currentDate),
+				GetMeta("ModificationDate", currentDate),
+				GetMeta("Application", "Canvas"),
+			)
 
 			// add custom color and/or support data, if available
 			for idx := range model.Resources {
