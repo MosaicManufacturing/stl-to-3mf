@@ -12,6 +12,12 @@ import (
 	"time"
 )
 
+const (
+	version3mf = "1"
+	mmPaintingVersion = "1"
+	fdmSupportsPaintingVersion = "1"
+)
+
 type ModelXML struct {
 	XMLName xml.Name `xml:"model"`
 	Units string `xml:"unit,attr"`
@@ -79,21 +85,10 @@ func (m *Mesh) AddColors(rle *util.RLE) {
 				currentColor = int(color.Runs[currentRunIndex].Value)
 			}
 		}
-		if currentColor != 0 {
-			// extruder 1: "4"
-			// extruder 2: "8"
-			// extruder 3: "0C"
-			// extruder 4: "1C"
-			// extruder 5: "2C"
-			// ...
-			switch currentColor {
-			case 1:
-				m.Triangles[triIdx].Segmentation = "4"
-			case 2:
-				m.Triangles[triIdx].Segmentation = "8"
-			default:
-				m.Triangles[triIdx].Segmentation = fmt.Sprintf("%dC", currentColor - 3)
-			}
+		if currentColor == 1 {
+			m.Triangles[triIdx].Segmentation = "8"
+		} else if currentColor > 1 {
+			m.Triangles[triIdx].Segmentation = fmt.Sprintf("%dC", currentColor - 2)
 		}
 		currentRunLength--
 	}
@@ -231,12 +226,44 @@ func (m *Bundle) Save(path string) (err error) {
 				return
 			}
 
+			// add custom color and/or support data, if available
+			hasCustomColors := false
+			hasCustomSupports := false
+			for idx := range model.Resources {
+				if m.Colors[idx] != nil {
+					model.Resources[idx].Mesh.AddColors(m.Colors[idx])
+					hasCustomColors = true
+				}
+				if m.Supports[idx] != nil {
+					model.Resources[idx].Mesh.AddCustomSupports(m.Supports[idx])
+					hasCustomSupports = true
+				}
+			}
+
+			// add missing metadata
 			model.Language = "en-US"
 			model.Slic3rNamespace = slic3rPENamespace
 			currentDate := time.Now().Format("2006-01-02") // YYYY-MM-DD
 			model.Metadata = append(
 				model.Metadata,
-				GetMeta("slic3rpe:Version3mf", "1"),
+				GetMeta("slic3rpe:Version3mf", version3mf),
+			)
+			if hasCustomColors {
+				// only include if any models are painted
+				model.Metadata = append(
+					model.Metadata,
+					GetMeta("slic3rpe:MmPaintingVersion", mmPaintingVersion),
+				)
+			}
+			if hasCustomSupports {
+				// only include if any models use custom supports
+				model.Metadata = append(
+					model.Metadata,
+					GetMeta("slic3rpe:FdmSupportsPaintingVersion", fdmSupportsPaintingVersion),
+				)
+			}
+			model.Metadata = append(
+				model.Metadata,
 				GetMeta("Title", "Project"),
 				GetMeta("Designer", ""),
 				GetMeta("Description", ""),
@@ -247,16 +274,6 @@ func (m *Bundle) Save(path string) (err error) {
 				GetMeta("ModificationDate", currentDate),
 				GetMeta("Application", "Canvas"),
 			)
-
-			// add custom color and/or support data, if available
-			for idx := range model.Resources {
-				if m.Colors[idx] != nil {
-					model.Resources[idx].Mesh.AddColors(m.Colors[idx])
-				}
-				if m.Supports[idx] != nil {
-					model.Resources[idx].Mesh.AddCustomSupports(m.Supports[idx])
-				}
-			}
 
 			// write modified content into final zip
 			output, marshalErr := xml.Marshal(model)
