@@ -16,6 +16,8 @@ type ModelOpts struct {
 	MeshPath string
 	Transforms string // serialized util.Matrix4
 	Extruder string // 1-indexed
+	WipeIntoInfill bool
+	WipeIntoModel bool
 }
 
 type Model struct {
@@ -24,6 +26,8 @@ type Model struct {
 	Colors *util.RLE
 	Supports *util.RLE
 	Extruder string
+	WipeIntoInfill bool
+	WipeIntoModel bool
 }
 
 type xmlns struct {
@@ -64,11 +68,13 @@ func addDefaultMetadata(model *go3mf.Model) {
 
 func STLtoModel(opts ModelOpts) (model Model, err error) {
 	model = Model{
-		Model:      new(go3mf.Model),
-		Transforms: util.Matrix4{},
-		Colors:     nil,
-		Supports:   nil,
-		Extruder:   opts.Extruder,
+		Model:          new(go3mf.Model),
+		Transforms:     util.Matrix4{},
+		Colors:         nil,
+		Supports:       nil,
+		Extruder:       opts.Extruder,
+		WipeIntoInfill: opts.WipeIntoInfill,
+		WipeIntoModel:  opts.WipeIntoModel,
 	}
 
 	// load the STL file using 3MF conversion

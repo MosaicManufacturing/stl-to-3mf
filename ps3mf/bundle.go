@@ -31,6 +31,8 @@ type Bundle struct {
 	Colors []*util.RLE // nil for objects with no data
 	Supports []*util.RLE // nil for objects with no data
 	Extruders []string // 1-indexed ints
+	WipeIntoInfill []bool
+	WipeIntoModel []bool
 	BoundingBox util.BoundingBox
 
 	Config string
@@ -89,6 +91,8 @@ func (m *Bundle) AddModel(model *Model) {
 	m.Colors = append(m.Colors, model.Colors)
 	m.Supports = append(m.Supports, model.Supports)
 	m.Extruders = append(m.Extruders, model.Extruder)
+	m.WipeIntoInfill = append(m.WipeIntoInfill, model.WipeIntoInfill)
+	m.WipeIntoModel = append(m.WipeIntoModel, model.WipeIntoModel)
 
 	m.BoundingBox.ExpandByBox(model.GetTransformedBbox())
 }

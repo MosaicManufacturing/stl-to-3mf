@@ -10,7 +10,7 @@ import (
 // stl-to-3mf outpath.3mf inpath.config <models>
 //
 //   <models>: <model> [<model> [...]]
-//   <model>:  [--colors colors.rle] [--supports supports.rle] transforms extruder model1.stl [...]
+//   <model>:  [--colors colors.rle] [--supports supports.rle] transforms extruder wipeIntoInfill wipeIntoModel model1.stl [...]
 
 type Opts struct {
 	Models []ps3mf.ModelOpts
@@ -41,6 +41,10 @@ func getOpts() Opts {
 		modelOpts.Transforms = argv[i]
 		i++
 		modelOpts.Extruder = argv[i]
+		i++
+		modelOpts.WipeIntoInfill = argv[i] == "1"
+		i++
+		modelOpts.WipeIntoModel = argv[i] == "1"
 		i++
 		modelOpts.MeshPath = argv[i]
 		i++
