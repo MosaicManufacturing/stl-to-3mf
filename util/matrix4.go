@@ -130,7 +130,7 @@ func UnserializeMatrix4 (str string) (Matrix4, error) {
 	lines := strings.Split(str, delimiterRow)
 
 	if len(lines) != 4 {
-		return Matrix4{}, fmt.Errorf("expected 4 rows in serialized Matrix4, found %d", len(lines))
+		return m, fmt.Errorf("expected 4 rows in serialized Matrix4, found %d", len(lines))
 	}
 	for i := 0; i < 4; i++ {
 		line := strings.Split(lines[i], delimiterCol)
@@ -148,7 +148,7 @@ func UnserializeMatrix4 (str string) (Matrix4, error) {
 	return m, nil
 }
 
-func (m Matrix4) ToString () string {
+func (m Matrix4) String () string {
 	str := ""
 	for i := 0; i < 4; i++ {
 		str += "[ "

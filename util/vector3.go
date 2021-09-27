@@ -25,7 +25,7 @@ func (vec *Vector3) TransformInPlace (transform Matrix4) {
 	vec.Vector = result.Vector
 }
 
-func (vec Vector3) ToString () string {
+func (vec Vector3) String () string {
 	return fmt.Sprintf("%.6e%s%.6e%s%.6e", vec.Vector[X], delimiterCol, vec.Vector[Y], delimiterCol, vec.Vector[Z])
 }
 
