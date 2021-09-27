@@ -27,6 +27,7 @@ import (
 //     /thumbnail.png
 
 type Bundle struct {
+	Names []string
 	Model *go3mf.Model
 	Colors []*util.RLE // nil for objects with no data
 	Supports []*util.RLE // nil for objects with no data
@@ -40,10 +41,15 @@ type Bundle struct {
 
 func NewBundle() Bundle {
 	return Bundle{
-		Model:       new(go3mf.Model),
-		Colors:      make([]*util.RLE, 0),
-		Supports:    make([]*util.RLE, 0),
-		Config:      "",
+		Names:		    make([]string, 0),
+		Model:          new(go3mf.Model),
+		Colors:         make([]*util.RLE, 0),
+		Supports:       make([]*util.RLE, 0),
+		Extruders:      make([]string, 0),
+		WipeIntoInfill: make([]bool, 0),
+		WipeIntoModel:  make([]bool, 0),
+		BoundingBox:    util.NewBoundingBox(),
+		Config:         "",
 	}
 }
 
@@ -88,6 +94,7 @@ func (m *Bundle) AddModel(model *Model) {
 
 	m.Model.Resources.Objects = append(m.Model.Resources.Objects, model.Model.Resources.Objects[0])
 	m.Model.Build.Items = append(m.Model.Build.Items, model.Model.Build.Items[0])
+	m.Names = append(m.Names, model.Name)
 	m.Colors = append(m.Colors, model.Colors)
 	m.Supports = append(m.Supports, model.Supports)
 	m.Extruders = append(m.Extruders, model.Extruder)

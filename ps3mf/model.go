@@ -11,6 +11,7 @@ import (
 )
 
 type ModelOpts struct {
+	Name string
 	ColorsPath string
 	SupportsPath string
 	MeshPath string
@@ -21,6 +22,7 @@ type ModelOpts struct {
 }
 
 type Model struct {
+	Name string
 	Model *go3mf.Model
 	Transforms util.Matrix4
 	Colors *util.RLE
@@ -68,6 +70,7 @@ func addDefaultMetadata(model *go3mf.Model) {
 
 func STLtoModel(opts ModelOpts) (model Model, err error) {
 	model = Model{
+		Name:		    opts.Name,
 		Model:          new(go3mf.Model),
 		Transforms:     util.Matrix4{},
 		Colors:         nil,

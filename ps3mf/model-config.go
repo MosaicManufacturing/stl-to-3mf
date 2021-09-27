@@ -46,8 +46,6 @@ func boolToIntString(b bool) string {
 }
 
 func (m *Bundle) GetModelConfig() ModelConfig {
-	// TODO: add future support for infill transitioning (purge_to_infill)
-	//  and model transitioning (purge_to_models)
 	config := ModelConfig{
 		Objects: make([]ModelConfigObject, 0, len(m.Model.Resources.Objects)),
 	}
@@ -57,7 +55,7 @@ func (m *Bundle) GetModelConfig() ModelConfig {
 			Id: id,
 			InstancesCount: "1",
 			Metadata: []ModelConfigMeta{
-				GetModelConfigMeta("object", "name", "model"),
+				GetModelConfigMeta("object", "name", m.Names[idx]),
 				GetModelConfigMeta("object", "extruder", m.Extruders[idx]),
 				GetModelConfigMeta("object", "wipe_into_infill", boolToIntString(m.WipeIntoInfill[idx])),
 				GetModelConfigMeta("object", "wipe_into_objects", boolToIntString(m.WipeIntoModel[idx])),
