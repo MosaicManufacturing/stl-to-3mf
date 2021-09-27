@@ -29,6 +29,7 @@ import (
 type Bundle struct {
 	Names []string
 	Model *go3mf.Model
+	Matrices []util.Matrix4
 	Colors []*util.RLE // nil for objects with no data
 	Supports []*util.RLE // nil for objects with no data
 	Extruders []string // 1-indexed ints
@@ -43,6 +44,7 @@ func NewBundle() Bundle {
 	return Bundle{
 		Names:		    make([]string, 0),
 		Model:          new(go3mf.Model),
+		Matrices:       make([]util.Matrix4, 0),
 		Colors:         make([]*util.RLE, 0),
 		Supports:       make([]*util.RLE, 0),
 		Extruders:      make([]string, 0),
@@ -53,12 +55,12 @@ func NewBundle() Bundle {
 	}
 }
 
-func (m *Bundle) LoadConfig(path string) error {
+func (b *Bundle) LoadConfig(path string) error {
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
-	m.Config = string(bytes)
+	b.Config = string(bytes)
 	return nil
 }
 
@@ -85,21 +87,22 @@ func getPrintableAttr(printable bool) spec.MarshalerAttr {
 	return printableAttr{printable}
 }
 
-func (m *Bundle) AddModel(model *Model) {
-	objectId := uint32(len(m.Model.Resources.Objects) + 1)
+func (b *Bundle) AddModel(model *Model) {
+	objectId := uint32(len(b.Model.Resources.Objects) + 1)
 	model.Model.Resources.Objects[0].ID = objectId
 	model.Model.Build.Items[0].ObjectID = objectId
 	model.Model.Build.Items[0].Transform = model.Transforms.To3MF()
 	model.Model.Build.Items[0].AnyAttr = append(model.Model.Build.Items[0].AnyAttr, getPrintableAttr(true))
 
-	m.Model.Resources.Objects = append(m.Model.Resources.Objects, model.Model.Resources.Objects[0])
-	m.Model.Build.Items = append(m.Model.Build.Items, model.Model.Build.Items[0])
-	m.Names = append(m.Names, model.Name)
-	m.Colors = append(m.Colors, model.Colors)
-	m.Supports = append(m.Supports, model.Supports)
-	m.Extruders = append(m.Extruders, model.Extruder)
-	m.WipeIntoInfill = append(m.WipeIntoInfill, model.WipeIntoInfill)
-	m.WipeIntoModel = append(m.WipeIntoModel, model.WipeIntoModel)
+	b.Model.Resources.Objects = append(b.Model.Resources.Objects, model.Model.Resources.Objects[0])
+	b.Model.Build.Items = append(b.Model.Build.Items, model.Model.Build.Items[0])
+	b.Names = append(b.Names, model.Name)
+	b.Matrices = append(b.Matrices, model.Transforms)
+	b.Colors = append(b.Colors, model.Colors)
+	b.Supports = append(b.Supports, model.Supports)
+	b.Extruders = append(b.Extruders, model.Extruder)
+	b.WipeIntoInfill = append(b.WipeIntoInfill, model.WipeIntoInfill)
+	b.WipeIntoModel = append(b.WipeIntoModel, model.WipeIntoModel)
 
-	m.BoundingBox.ExpandByBox(model.GetTransformedBbox())
+	b.BoundingBox.ExpandByBox(model.GetTransformedBbox())
 }

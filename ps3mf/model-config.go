@@ -5,6 +5,11 @@ import (
 	"strconv"
 )
 
+type IdPair struct {
+	FirstId int
+	LastId int
+}
+
 type ModelConfig struct {
 	XMLName xml.Name `xml:"config"`
 	Objects []ModelConfigObject `xml:"object"`
@@ -15,7 +20,7 @@ type ModelConfigObject struct {
 	Id string `xml:"id,attr"`
 	InstancesCount string `xml:"instances_count,attr"`
 	Metadata []ModelConfigMeta `xml:"metadata"`
-	Volume ModelConfigVolume `xml:"volume"`
+	Volume []ModelConfigVolume `xml:"volume"`
 }
 
 type ModelConfigVolume struct {
@@ -45,27 +50,37 @@ func boolToIntString(b bool) string {
 	return "0"
 }
 
-func (m *Bundle) GetModelConfig() ModelConfig {
+func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair) ModelConfig {
 	config := ModelConfig{
-		Objects: make([]ModelConfigObject, 0, len(m.Model.Resources.Objects)),
+		Objects: make([]ModelConfigObject, 0, len(b.Model.Resources.Objects)),
 	}
-	for idx := range m.Model.Resources.Objects {
-		id := strconv.Itoa(int(m.Model.Resources.Objects[idx].ID))
+	for idx := range m.Resources {
+		id := m.Resources[idx].Id
 		objectConfig := ModelConfigObject{
 			Id: id,
 			InstancesCount: "1",
 			Metadata: []ModelConfigMeta{
-				GetModelConfigMeta("object", "name", m.Names[idx]),
-				GetModelConfigMeta("object", "extruder", m.Extruders[idx]),
-				GetModelConfigMeta("object", "wipe_into_infill", boolToIntString(m.WipeIntoInfill[idx])),
-				GetModelConfigMeta("object", "wipe_into_objects", boolToIntString(m.WipeIntoModel[idx])),
+				GetModelConfigMeta("object", "name", "model"),
+				GetModelConfigMeta("object", "extruder", b.Extruders[idx]),
+				GetModelConfigMeta("object", "wipe_into_infill", boolToIntString(b.WipeIntoInfill[idx])),
+				GetModelConfigMeta("object", "wipe_into_objects", boolToIntString(b.WipeIntoModel[idx])),
 			},
-			Volume: ModelConfigVolume{
+			Volume: make([]ModelConfigVolume, len(idPairs)),
+		}
+		for volumeIndex, idPair := range idPairs {
+			objectConfig.Volume[volumeIndex] = ModelConfigVolume{
 				XMLName:  xml.Name{},
-				FirstId:  "0",
-				LastId:   strconv.Itoa(len(m.Model.Resources.Objects[idx].Mesh.Triangles) - 1),
-				Metadata: make([]ModelConfigMeta, 0),
-			},
+				FirstId:  strconv.Itoa(idPair.FirstId),
+				LastId:   strconv.Itoa(idPair.LastId),
+				Metadata: []ModelConfigMeta{
+					GetModelConfigMeta("volume", "name", b.Names[volumeIndex]),
+					GetModelConfigMeta("volume", "volume_type", "ModelPart"),
+					// use identity matrix since vertices are already transformed
+					GetModelConfigMeta("volume", "matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
+					GetModelConfigMeta("volume", "source_object_id", strconv.Itoa(volumeIndex)),
+					GetModelConfigMeta("volume", "source_volume_id", "0"),
+				},
+			}
 		}
 		config.Objects = append(config.Objects, objectConfig)
 	}

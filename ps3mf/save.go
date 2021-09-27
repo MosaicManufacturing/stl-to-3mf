@@ -50,16 +50,27 @@ type Mesh struct {
 
 type Vertex struct {
 	XMLName xml.Name `xml:"vertex"`
-	X string `xml:"x,attr"`
-	Y string `xml:"y,attr"`
-	Z string `xml:"z,attr"`
+	X float64 `xml:"x,attr"`
+	Y float64 `xml:"y,attr"`
+	Z float64 `xml:"z,attr"`
+}
+
+func (v Vertex) Transform(m util.Matrix4) Vertex {
+	vec := util.NewVector3(v.X, v.Y, v.Z)
+	vec.TransformInPlace(m)
+	return Vertex{
+		XMLName: v.XMLName,
+		X:       vec.Vector[0],
+		Y:       vec.Vector[1],
+		Z:       vec.Vector[2],
+	}
 }
 
 type Triangle struct {
 	XMLName xml.Name `xml:"triangle"`
-	V1 string `xml:"v1,attr"`
-	V2 string `xml:"v2,attr"`
-	V3 string `xml:"v3,attr"`
+	V1 int `xml:"v1,attr"`
+	V2 int `xml:"v2,attr"`
+	V3 int `xml:"v3,attr"`
 	Segmentation string `xml:"slic3rpe:mmu_segmentation,attr,omitempty"`
 	CustomSupports string `xml:"slic3rpe:custom_supports,attr,omitempty"`
 }
@@ -69,6 +80,53 @@ type BuildItem struct {
 	ObjectId string `xml:"objectid,attr"`
 	Transform string `xml:"transform,attr,omitempty"`
 	Printable string `xml:"printable,attr,omitempty"`
+}
+
+func (m *ModelXML) MergeMeshes(matrices []util.Matrix4) []IdPair {
+	idPairs := make([]IdPair, 0, len(m.Resources))
+	idPairs = append(idPairs, IdPair{
+		FirstId: 0,
+		LastId:  len(m.Resources[0].Mesh.Triangles) - 1,
+	})
+
+	currentVertCount := len(m.Resources[0].Mesh.Vertices)
+	currentTriCount := len(m.Resources[0].Mesh.Triangles)
+
+	// apply transformations to first mesh's vertices
+	for vertIdx, vert := range m.Resources[0].Mesh.Vertices {
+		transformedVert := vert.Transform(matrices[0])
+		m.Resources[0].Mesh.Vertices[vertIdx] = transformedVert
+	}
+
+	for i := 1; i < len(m.Resources); i++ {
+		mesh := m.Resources[i].Mesh
+		// apply transformations to this mesh's vertices
+		for _, vert := range mesh.Vertices {
+			transformedVert := vert.Transform(matrices[i])
+			m.Resources[0].Mesh.Vertices = append(m.Resources[0].Mesh.Vertices, transformedVert)
+		}
+		for _, tri := range mesh.Triangles {
+			tri.V1 += currentVertCount
+			tri.V2 += currentVertCount
+			tri.V3 += currentVertCount
+			m.Resources[0].Mesh.Triangles = append(m.Resources[0].Mesh.Triangles, tri)
+		}
+		idPairs = append(idPairs, IdPair{
+			FirstId: currentTriCount,
+			LastId:  currentTriCount + len(mesh.Triangles) - 1,
+		})
+		currentVertCount += len(mesh.Vertices)
+		currentTriCount += len(mesh.Triangles)
+	}
+
+	m.Resources = m.Resources[:1]
+	m.Resources[0].Type = "model"
+
+	m.Build = m.Build[:1]
+	// use identity matrix since vertices are already transformed
+	m.Build[0].Transform = "1 0 0 0 0 1 0 0 0 0 1 0"
+
+	return idPairs
 }
 
 func (m *Mesh) AddColors(rle *util.RLE) {
@@ -124,7 +182,7 @@ func GetMeta(name, value string) Meta {
 	}
 }
 
-func (m *Bundle) Save(path string) (err error) {
+func (b *Bundle) Save(path string) (err error) {
 	// general workflow:
 	// 1. use 3MF lib to write "vanilla" 3MF to temp file
 	// 2. use zip lib to open and modify 3MF contents
@@ -161,7 +219,7 @@ func (m *Bundle) Save(path string) (err error) {
 		err = writerErr
 		return
 	}
-	if err = tempWriter.Encode(m.Model); err != nil {
+	if err = tempWriter.Encode(b.Model); err != nil {
 		return
 	}
 	if err = tempWriter.Close(); err != nil {
@@ -195,6 +253,9 @@ func (m *Bundle) Save(path string) (err error) {
 	}()
 	writer := zip.NewWriter(zipFile)
 
+	var model ModelXML
+	var idPairs []IdPair
+
 	for _, file := range reader.File {
 		fileWriter, writerErr := writer.Create(file.Name)
 		if writerErr != nil {
@@ -202,7 +263,6 @@ func (m *Bundle) Save(path string) (err error) {
 			return
 		}
 		if file.Name == "3D/3dmodel.model" {
-			var model ModelXML
 			// read file and parse XML into struct
 			readCloser, openErr := file.Open()
 			if openErr != nil {
@@ -230,12 +290,12 @@ func (m *Bundle) Save(path string) (err error) {
 			hasCustomColors := false
 			hasCustomSupports := false
 			for idx := range model.Resources {
-				if m.Colors[idx] != nil {
-					model.Resources[idx].Mesh.AddColors(m.Colors[idx])
+				if b.Colors[idx] != nil {
+					model.Resources[idx].Mesh.AddColors(b.Colors[idx])
 					hasCustomColors = true
 				}
-				if m.Supports[idx] != nil {
-					model.Resources[idx].Mesh.AddCustomSupports(m.Supports[idx])
+				if b.Supports[idx] != nil {
+					model.Resources[idx].Mesh.AddCustomSupports(b.Supports[idx])
 					hasCustomSupports = true
 				}
 			}
@@ -275,6 +335,9 @@ func (m *Bundle) Save(path string) (err error) {
 				GetMeta("Application", "Canvas"),
 			)
 
+			// combine all meshes into a single mesh
+			idPairs = model.MergeMeshes(b.Matrices)
+
 			// write modified content into final zip
 			output, marshalErr := xml.Marshal(model)
 			if marshalErr != nil {
@@ -301,20 +364,20 @@ func (m *Bundle) Save(path string) (err error) {
 	}
 
 	// copy in Metadata/Slic3r_PE.config
-	if len(m.Config) > 0 {
+	if len(b.Config) > 0 {
 		fileWriter, writerErr := writer.Create("Metadata/Slic3r_PE.config")
 		if writerErr != nil {
 			err = writerErr
 			return
 		}
-		if _, writeErr := io.WriteString(fileWriter, m.Config); writeErr != nil {
+		if _, writeErr := io.WriteString(fileWriter, b.Config); writeErr != nil {
 			err = writeErr
 			return
 		}
 	}
 
 	// generate and write in Metadata/Slic3r_PE_model.config
-	modelConfig := m.GetModelConfig()
+	modelConfig := b.GetModelConfig(&model, idPairs)
 	output, marshalErr := xml.Marshal(modelConfig)
 	if marshalErr != nil {
 		err = marshalErr
