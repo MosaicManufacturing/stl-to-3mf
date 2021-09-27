@@ -61,7 +61,7 @@ func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair) ModelConfig {
 			InstancesCount: "1",
 			Metadata: []ModelConfigMeta{
 				GetModelConfigMeta("object", "name", "model"),
-				GetModelConfigMeta("object", "extruder", b.Extruders[idx]),
+				GetModelConfigMeta("object", "extruder", "0"), // "default" (look at volumes instead)
 				GetModelConfigMeta("object", "wipe_into_infill", boolToIntString(b.WipeIntoInfill[idx])),
 				GetModelConfigMeta("object", "wipe_into_objects", boolToIntString(b.WipeIntoModel[idx])),
 			},
@@ -79,6 +79,7 @@ func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair) ModelConfig {
 					GetModelConfigMeta("volume", "matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
 					GetModelConfigMeta("volume", "source_object_id", strconv.Itoa(volumeIndex)),
 					GetModelConfigMeta("volume", "source_volume_id", "0"),
+					GetModelConfigMeta("volume", "extruder", b.Extruders[volumeIndex]),
 				},
 			}
 		}
