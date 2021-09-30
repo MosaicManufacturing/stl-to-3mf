@@ -133,20 +133,29 @@ func (m *Mesh) AddColors(rle *util.RLE) {
 	color := *rle
 	currentRunIndex := -1
 	currentRunLength := 0
-	currentColor := 0
+	currentColor := uint8(0)
 
 	for triIdx := range m.Triangles {
 		if currentRunLength <= 0 {
 			if currentRunIndex < len(color.Runs) {
 				currentRunIndex++
 				currentRunLength = int(color.Runs[currentRunIndex].Length)
-				currentColor = int(color.Runs[currentRunIndex].Value)
+				currentColor = color.Runs[currentRunIndex].Value
 			}
 		}
+		// 1 ->  8 -> 0000 1000
+		// 2 -> 0C -> 0000 1100
+		// 3 -> 1C -> 0001 1100
+		// 4 -> 2C -> 0010 1100
+		// 5 -> 3C -> 0011 1100
+		// 6 -> 4C -> 0100 1100
+		// 7 -> 5C -> 0101 1100
+		// 8 -> 6C -> 0110 1100
+		// ...
 		if currentColor == 1 {
 			m.Triangles[triIdx].Segmentation = "8"
 		} else if currentColor > 1 {
-			m.Triangles[triIdx].Segmentation = fmt.Sprintf("%dC", currentColor - 2)
+			m.Triangles[triIdx].Segmentation = fmt.Sprintf("%xC", currentColor - 2)
 		}
 		currentRunLength--
 	}
