@@ -1,0 +1,43 @@
+stages:
+  - build
+  - deploy
+
+build:
+  image: golang:1.16
+  stage: build
+  artifacts:
+    paths:
+      - stl-to-3mf
+    expire_in: 1 day
+  variables:
+    GOOS: linux
+    GOARCH: amd64
+  before_script:
+    - env GOOS=linux GOARCH=amd64
+  script:
+    - GO111MODULE=off go get github.com/hpinc/go3mf
+    - GO111MODULE=off go build
+
+deploy dev:
+  image: napp/docker-aws-cli
+  stage: deploy
+  dependencies:
+    - build
+  only:
+    - master
+  environment:
+    name: development
+  script:
+    - aws s3 cp ./stl-to-3mf s3://$AWS_BUCKET/go-utils/stl-to-3mf-development
+
+deploy prod:
+  image: napp/docker-aws-cli
+  stage: deploy
+  dependencies:
+    - build
+  only:
+    - production
+  environment:
+    name: production
+  script:
+    - aws s3 cp ./stl-to-3mf s3://$AWS_BUCKET/go-utils/stl-to-3mf-production
