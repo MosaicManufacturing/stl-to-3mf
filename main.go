@@ -1,9 +1,9 @@
 package main
 
 import (
-	"./ps3mf"
 	"fmt"
 	"log"
+	"mosaicmfg.com/stl-to-3mf/ps3mf"
 	"os"
 )
 

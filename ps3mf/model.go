@@ -1,12 +1,12 @@
 package ps3mf
 
 import (
-	"../util"
 	"bufio"
 	"encoding/xml"
 	"github.com/hpinc/go3mf"
 	"github.com/hpinc/go3mf/importer/stl"
 	"github.com/hpinc/go3mf/spec"
+	"mosaicmfg.com/stl-to-3mf/util"
 	"os"
 )
 

@@ -1,11 +1,11 @@
 package ps3mf
 
 import (
-	"../util"
 	"encoding/xml"
 	"github.com/hpinc/go3mf"
 	"github.com/hpinc/go3mf/spec"
 	"io/ioutil"
+	"mosaicmfg.com/stl-to-3mf/util"
 )
 
 // structure of PrusaSlicer 3MF file:

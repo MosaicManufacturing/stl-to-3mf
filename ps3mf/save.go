@@ -1,13 +1,13 @@
 package ps3mf
 
 import (
-	"../util"
 	"archive/zip"
 	"encoding/xml"
 	"fmt"
 	"github.com/hpinc/go3mf"
 	"io"
 	"io/ioutil"
+	"mosaicmfg.com/stl-to-3mf/util"
 	"os"
 	"time"
 )
