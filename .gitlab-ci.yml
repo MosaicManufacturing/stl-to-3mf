@@ -15,8 +15,7 @@ build:
   before_script:
     - env GOOS=linux GOARCH=amd64
   script:
-    - GO111MODULE=off go get github.com/hpinc/go3mf
-    - GO111MODULE=off go build
+    - go build
 
 deploy dev:
   image: napp/docker-aws-cli
