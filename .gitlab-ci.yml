@@ -1,6 +1,13 @@
 stages:
+  - test
   - build
   - deploy
+
+license check:
+  image: golang:1.16
+  stage: test
+  script:
+    - ./licensebot-check.sh
 
 build:
   image: golang:1.16
