@@ -27,22 +27,22 @@ import (
 //     /thumbnail.png
 
 type Bundle struct {
-	Names []string
-	Model *go3mf.Model
-	Matrices []util.Matrix4
-	Colors []*util.RLE // nil for objects with no data
-	Supports []*util.RLE // nil for objects with no data
-	Extruders []string // 1-indexed ints
+	Names          []string
+	Model          *go3mf.Model
+	Matrices       []util.Matrix4
+	Colors         []*util.RLE // nil for objects with no data
+	Supports       []*util.RLE // nil for objects with no data
+	Extruders      []string    // 1-indexed ints
 	WipeIntoInfill []bool
-	WipeIntoModel []bool
-	BoundingBox util.BoundingBox
+	WipeIntoModel  []bool
+	BoundingBox    util.BoundingBox
 
 	Config string
 }
 
 func NewBundle() Bundle {
 	return Bundle{
-		Names:		    make([]string, 0),
+		Names:          make([]string, 0),
 		Model:          new(go3mf.Model),
 		Matrices:       make([]util.Matrix4, 0),
 		Colors:         make([]*util.RLE, 0),
@@ -75,7 +75,7 @@ func (att printableAttr) Marshal3MFAttr(spec.Encoder) ([]xml.Attr, error) {
 	}
 	return []xml.Attr{
 		{
-			Name:  xml.Name{
+			Name: xml.Name{
 				Local: "printable",
 			},
 			Value: val,

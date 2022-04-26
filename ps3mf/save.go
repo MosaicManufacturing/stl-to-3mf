@@ -13,46 +13,46 @@ import (
 )
 
 const (
-	version3mf = "1"
-	mmPaintingVersion = "1"
+	version3mf                 = "1"
+	mmPaintingVersion          = "1"
 	fdmSupportsPaintingVersion = "1"
 )
 
 type ModelXML struct {
-	XMLName xml.Name `xml:"model"`
-	Units string `xml:"unit,attr"`
-	Language string `xml:"xml:lang,attr"`
-	Namespace string `xml:"xmlns,attr"`
-	Slic3rNamespace string `xml:"xmlns:slic3rpe,attr"`
-	Metadata []Meta `xml:"metadata"`
-	Resources []Resource `xml:"resources>object"`
-	Build []BuildItem `xml:"build>item"`
+	XMLName         xml.Name    `xml:"model"`
+	Units           string      `xml:"unit,attr"`
+	Language        string      `xml:"xml:lang,attr"`
+	Namespace       string      `xml:"xmlns,attr"`
+	Slic3rNamespace string      `xml:"xmlns:slic3rpe,attr"`
+	Metadata        []Meta      `xml:"metadata"`
+	Resources       []Resource  `xml:"resources>object"`
+	Build           []BuildItem `xml:"build>item"`
 }
 
 type Meta struct {
 	XMLName xml.Name `xml:"metadata"`
-	Name string `xml:"name,attr"`
-	Value string `xml:",innerxml"`
+	Name    string   `xml:"name,attr"`
+	Value   string   `xml:",innerxml"`
 }
 
 type Resource struct {
 	XMLName xml.Name `xml:"object"`
-	Id string `xml:"id,attr"`
-	Type string `xml:"type,attr,omitempty"`
-	Mesh Mesh `xml:"mesh"`
+	Id      string   `xml:"id,attr"`
+	Type    string   `xml:"type,attr,omitempty"`
+	Mesh    Mesh     `xml:"mesh"`
 }
 
 type Mesh struct {
-	XMLName xml.Name `xml:"mesh"`
-	Vertices []Vertex `xml:"vertices>vertex"`
+	XMLName   xml.Name   `xml:"mesh"`
+	Vertices  []Vertex   `xml:"vertices>vertex"`
 	Triangles []Triangle `xml:"triangles>triangle"`
 }
 
 type Vertex struct {
 	XMLName xml.Name `xml:"vertex"`
-	X float64 `xml:"x,attr"`
-	Y float64 `xml:"y,attr"`
-	Z float64 `xml:"z,attr"`
+	X       float64  `xml:"x,attr"`
+	Y       float64  `xml:"y,attr"`
+	Z       float64  `xml:"z,attr"`
 }
 
 func (v Vertex) Transform(m util.Matrix4) Vertex {
@@ -67,19 +67,19 @@ func (v Vertex) Transform(m util.Matrix4) Vertex {
 }
 
 type Triangle struct {
-	XMLName xml.Name `xml:"triangle"`
-	V1 int `xml:"v1,attr"`
-	V2 int `xml:"v2,attr"`
-	V3 int `xml:"v3,attr"`
-	Segmentation string `xml:"slic3rpe:mmu_segmentation,attr,omitempty"`
-	CustomSupports string `xml:"slic3rpe:custom_supports,attr,omitempty"`
+	XMLName        xml.Name `xml:"triangle"`
+	V1             int      `xml:"v1,attr"`
+	V2             int      `xml:"v2,attr"`
+	V3             int      `xml:"v3,attr"`
+	Segmentation   string   `xml:"slic3rpe:mmu_segmentation,attr,omitempty"`
+	CustomSupports string   `xml:"slic3rpe:custom_supports,attr,omitempty"`
 }
 
 type BuildItem struct {
-	XMLName xml.Name `xml:"item"`
-	ObjectId string `xml:"objectid,attr"`
-	Transform string `xml:"transform,attr,omitempty"`
-	Printable string `xml:"printable,attr,omitempty"`
+	XMLName   xml.Name `xml:"item"`
+	ObjectId  string   `xml:"objectid,attr"`
+	Transform string   `xml:"transform,attr,omitempty"`
+	Printable string   `xml:"printable,attr,omitempty"`
 }
 
 func (m *ModelXML) MergeMeshes(matrices []util.Matrix4) []IdPair {
@@ -155,7 +155,7 @@ func (m *Mesh) AddColors(rle *util.RLE) {
 		if currentColor == 1 {
 			m.Triangles[triIdx].Segmentation = "8"
 		} else if currentColor > 1 {
-			m.Triangles[triIdx].Segmentation = fmt.Sprintf("%xC", currentColor - 2)
+			m.Triangles[triIdx].Segmentation = fmt.Sprintf("%xC", currentColor-2)
 		}
 		currentRunLength--
 	}
@@ -186,7 +186,7 @@ func (m *Mesh) AddCustomSupports(rle *util.RLE) {
 
 func GetMeta(name, value string) Meta {
 	return Meta{
-		Name: name,
+		Name:  name,
 		Value: value,
 	}
 }

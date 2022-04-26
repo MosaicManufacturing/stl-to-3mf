@@ -13,8 +13,8 @@ import (
 //   <model>:  [--colors colors.rle] [--supports supports.rle] name transforms extruder wipeIntoInfill wipeIntoModel model1.stl [...]
 
 type Opts struct {
-	Models []ps3mf.ModelOpts
-	OutPath string
+	Models     []ps3mf.ModelOpts
+	OutPath    string
 	ConfigPath string
 }
 

@@ -7,7 +7,7 @@ import (
 
 type Run struct {
 	Length uint32
-	Value uint8
+	Value  uint8
 }
 
 type RLE struct {
@@ -23,12 +23,11 @@ func LoadRLE(path string) (*RLE, error) {
 	rle := new(RLE)
 	for i := 0; i < len(rleBytes); i += 5 {
 		runLength := binary.LittleEndian.Uint32(rleBytes[i:])
-		value := rleBytes[i + 4]
+		value := rleBytes[i+4]
 		rle.Runs = append(rle.Runs, Run{
-			Length:  runLength,
-			Value: value,
+			Length: runLength,
+			Value:  value,
 		})
 	}
 	return rle, nil
 }
-

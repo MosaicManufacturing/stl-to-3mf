@@ -22,7 +22,7 @@ type Matrix4 struct {
 	Matrix [4]Vector4
 }
 
-func NewMatrix4 () Matrix4 {
+func NewMatrix4() Matrix4 {
 	return Matrix4{
 		Matrix: [4]Vector4{
 			NewVector4(0, 0, 0, 0),
@@ -33,7 +33,7 @@ func NewMatrix4 () Matrix4 {
 	}
 }
 
-func M4Identity () Matrix4 {
+func M4Identity() Matrix4 {
 	m := NewMatrix4()
 	m.Matrix[0].Vector[X] = 1
 	m.Matrix[1].Vector[Y] = 1
@@ -42,7 +42,7 @@ func M4Identity () Matrix4 {
 	return m
 }
 
-func M4Translate (dx float64, dy float64, dz float64) Matrix4 {
+func M4Translate(dx float64, dy float64, dz float64) Matrix4 {
 	m := M4Identity()
 	m.Matrix[3].Vector[X] = dx
 	m.Matrix[3].Vector[Y] = dy
@@ -50,7 +50,7 @@ func M4Translate (dx float64, dy float64, dz float64) Matrix4 {
 	return m
 }
 
-func M4Scale (sx float64, sy float64, sz float64) Matrix4 {
+func M4Scale(sx float64, sy float64, sz float64) Matrix4 {
 	m := M4Identity()
 	m.Matrix[0].Vector[X] = sx
 	m.Matrix[1].Vector[Y] = sy
@@ -58,7 +58,7 @@ func M4Scale (sx float64, sy float64, sz float64) Matrix4 {
 	return m
 }
 
-func M4RotateX (theta float64) Matrix4 {
+func M4RotateX(theta float64) Matrix4 {
 	m := M4Identity()
 	m.Matrix[1].Vector[Y] = math.Cos(theta)
 	m.Matrix[1].Vector[Z] = math.Sin(theta)
@@ -67,7 +67,7 @@ func M4RotateX (theta float64) Matrix4 {
 	return m
 }
 
-func M4RotateY (theta float64) Matrix4 {
+func M4RotateY(theta float64) Matrix4 {
 	m := M4Identity()
 	m.Matrix[0].Vector[X] = math.Cos(theta)
 	m.Matrix[0].Vector[Z] = -math.Sin(theta)
@@ -76,7 +76,7 @@ func M4RotateY (theta float64) Matrix4 {
 	return m
 }
 
-func M4RotateZ (theta float64) Matrix4 {
+func M4RotateZ(theta float64) Matrix4 {
 	m := M4Identity()
 	m.Matrix[0].Vector[X] = math.Cos(theta)
 	m.Matrix[0].Vector[Y] = math.Sin(theta)
@@ -85,7 +85,7 @@ func M4RotateZ (theta float64) Matrix4 {
 	return m
 }
 
-func (m Matrix4) Multiply (matrix Matrix4) Matrix4 {
+func (m Matrix4) Multiply(matrix Matrix4) Matrix4 {
 	a := m.Matrix
 	b := matrix.Matrix
 	result := NewMatrix4()
@@ -101,7 +101,7 @@ func (m Matrix4) Multiply (matrix Matrix4) Matrix4 {
 	return result
 }
 
-func (m Matrix4) MultiplyVector (v Vector4) Vector4 {
+func (m Matrix4) MultiplyVector(v Vector4) Vector4 {
 	a := m.Matrix
 	b := v.Vector
 	result := NewVector4(0, 0, 0, 0)
@@ -113,7 +113,7 @@ func (m Matrix4) MultiplyVector (v Vector4) Vector4 {
 	return result
 }
 
-func (m Matrix4) Serialize () string {
+func (m Matrix4) Serialize() string {
 	var output []string
 	for i := 0; i < 4; i++ {
 		var line []string
@@ -125,7 +125,7 @@ func (m Matrix4) Serialize () string {
 	return strings.Join(output, delimiterRow)
 }
 
-func UnserializeMatrix4 (str string) (Matrix4, error) {
+func UnserializeMatrix4(str string) (Matrix4, error) {
 	m := NewMatrix4()
 	lines := strings.Split(str, delimiterRow)
 
@@ -148,7 +148,7 @@ func UnserializeMatrix4 (str string) (Matrix4, error) {
 	return m, nil
 }
 
-func (m Matrix4) String () string {
+func (m Matrix4) String() string {
 	str := ""
 	for i := 0; i < 4; i++ {
 		str += "[ "
@@ -161,7 +161,7 @@ func (m Matrix4) String () string {
 	return str
 }
 
-func (m Matrix4) To3MF () go3mf.Matrix {
+func (m Matrix4) To3MF() go3mf.Matrix {
 	return go3mf.Matrix{
 		float32(m.Matrix[0].Vector[X]), float32(m.Matrix[0].Vector[Y]), float32(m.Matrix[0].Vector[Z]), float32(m.Matrix[0].Vector[W]),
 		float32(m.Matrix[1].Vector[X]), float32(m.Matrix[1].Vector[Y]), float32(m.Matrix[1].Vector[Z]), float32(m.Matrix[1].Vector[W]),

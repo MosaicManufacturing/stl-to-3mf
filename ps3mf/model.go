@@ -11,25 +11,25 @@ import (
 )
 
 type ModelOpts struct {
-	Name string
-	ColorsPath string
-	SupportsPath string
-	MeshPath string
-	Transforms string // serialized util.Matrix4
-	Extruder string // 1-indexed
+	Name           string
+	ColorsPath     string
+	SupportsPath   string
+	MeshPath       string
+	Transforms     string // serialized util.Matrix4
+	Extruder       string // 1-indexed
 	WipeIntoInfill bool
-	WipeIntoModel bool
+	WipeIntoModel  bool
 }
 
 type Model struct {
-	Name string
-	Model *go3mf.Model
-	Transforms util.Matrix4
-	Colors *util.RLE
-	Supports *util.RLE
-	Extruder string
+	Name           string
+	Model          *go3mf.Model
+	Transforms     util.Matrix4
+	Colors         *util.RLE
+	Supports       *util.RLE
+	Extruder       string
 	WipeIntoInfill bool
-	WipeIntoModel bool
+	WipeIntoModel  bool
 }
 
 type xmlns struct {
@@ -39,7 +39,7 @@ type xmlns struct {
 func (n xmlns) Marshal3MFAttr(spec.Encoder) ([]xml.Attr, error) {
 	return []xml.Attr{
 		{
-			Name:  xml.Name{
+			Name: xml.Name{
 				Space: "xmlns",
 				Local: "slic3rpe",
 			},
@@ -56,7 +56,7 @@ func getSlicerPENamespace() spec.MarshalerAttr {
 
 func getMetadataElement(name, value string) go3mf.Metadata {
 	return go3mf.Metadata{
-		Name: xml.Name{Local: name},
+		Name:  xml.Name{Local: name},
 		Value: value,
 	}
 }
@@ -70,7 +70,7 @@ func addDefaultMetadata(model *go3mf.Model) {
 
 func STLtoModel(opts ModelOpts) (model Model, err error) {
 	model = Model{
-		Name:		    opts.Name,
+		Name:           opts.Name,
 		Model:          new(go3mf.Model),
 		Transforms:     util.Matrix4{},
 		Colors:         nil,

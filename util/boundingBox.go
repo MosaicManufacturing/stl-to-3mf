@@ -12,14 +12,14 @@ type BoundingBox struct {
 	Max Vector3
 }
 
-func NewBoundingBox () BoundingBox {
+func NewBoundingBox() BoundingBox {
 	return BoundingBox{
 		Min: NewVector3(math.Inf(1), math.Inf(1), math.Inf(1)),
 		Max: NewVector3(math.Inf(-1), math.Inf(-1), math.Inf(-1)),
 	}
 }
 
-func (bbox *BoundingBox) ExpandByPoint (point Vector3) {
+func (bbox *BoundingBox) ExpandByPoint(point Vector3) {
 	bbox.Min.Vector[X] = math.Min(bbox.Min.Vector[X], point.Vector[X])
 	bbox.Min.Vector[Y] = math.Min(bbox.Min.Vector[Y], point.Vector[Y])
 	bbox.Min.Vector[Z] = math.Min(bbox.Min.Vector[Z], point.Vector[Z])
@@ -28,7 +28,7 @@ func (bbox *BoundingBox) ExpandByPoint (point Vector3) {
 	bbox.Max.Vector[Z] = math.Max(bbox.Max.Vector[Z], point.Vector[Z])
 }
 
-func (bbox *BoundingBox) ExpandByBox (box BoundingBox) {
+func (bbox *BoundingBox) ExpandByBox(box BoundingBox) {
 	bbox.Min.Vector[X] = math.Min(bbox.Min.Vector[X], box.Min.Vector[X])
 	bbox.Min.Vector[Y] = math.Min(bbox.Min.Vector[Y], box.Min.Vector[Y])
 	bbox.Min.Vector[Z] = math.Min(bbox.Min.Vector[Z], box.Min.Vector[Z])
@@ -37,11 +37,11 @@ func (bbox *BoundingBox) ExpandByBox (box BoundingBox) {
 	bbox.Max.Vector[Z] = math.Max(bbox.Max.Vector[Z], box.Max.Vector[Z])
 }
 
-func (bbox BoundingBox) GetCenter () Vector3 {
+func (bbox BoundingBox) GetCenter() Vector3 {
 	return NewVector3(
-		(bbox.Min.Vector[X] + bbox.Max.Vector[X]) / 2,
-		(bbox.Min.Vector[Y] + bbox.Max.Vector[Y]) / 2,
-		(bbox.Min.Vector[Z] + bbox.Max.Vector[Z]) / 2,
+		(bbox.Min.Vector[X]+bbox.Max.Vector[X])/2,
+		(bbox.Min.Vector[Y]+bbox.Max.Vector[Y])/2,
+		(bbox.Min.Vector[Z]+bbox.Max.Vector[Z])/2,
 	)
 }
 

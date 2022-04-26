@@ -7,46 +7,48 @@ import (
 
 type IdPair struct {
 	FirstId int
-	LastId int
+	LastId  int
 }
 
 type ModelConfig struct {
-	XMLName xml.Name `xml:"config"`
+	XMLName xml.Name            `xml:"config"`
 	Objects []ModelConfigObject `xml:"object"`
 }
 
 type ModelConfigObject struct {
-	XMLName xml.Name `xml:"object"`
-	Id string `xml:"id,attr"`
-	InstancesCount string `xml:"instances_count,attr"`
-	Metadata []ModelConfigMeta `xml:"metadata"`
-	Volume []ModelConfigVolume `xml:"volume"`
+	XMLName        xml.Name            `xml:"object"`
+	Id             string              `xml:"id,attr"`
+	InstancesCount string              `xml:"instances_count,attr"`
+	Metadata       []ModelConfigMeta   `xml:"metadata"`
+	Volume         []ModelConfigVolume `xml:"volume"`
 }
 
 type ModelConfigVolume struct {
-	XMLName xml.Name `xml:"volume"`
-	FirstId string `xml:"firstid,attr"`
-	LastId string `xml:"lastid,attr"`
+	XMLName  xml.Name          `xml:"volume"`
+	FirstId  string            `xml:"firstid,attr"`
+	LastId   string            `xml:"lastid,attr"`
 	Metadata []ModelConfigMeta `xml:"metadata"`
 }
 
 type ModelConfigMeta struct {
 	XMLName xml.Name `xml:"metadata"`
-	Type string `xml:"type,attr"`
-	Key string `xml:"key,attr"`
-	Value string `xml:"value,attr"`
+	Type    string   `xml:"type,attr"`
+	Key     string   `xml:"key,attr"`
+	Value   string   `xml:"value,attr"`
 }
 
 func GetModelConfigMeta(typ, key, value string) ModelConfigMeta {
 	return ModelConfigMeta{
-		Type: typ,
-		Key: key,
+		Type:  typ,
+		Key:   key,
 		Value: value,
 	}
 }
 
 func boolToIntString(b bool) string {
-	if b { return "1" }
+	if b {
+		return "1"
+	}
 	return "0"
 }
 
@@ -57,7 +59,7 @@ func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair) ModelConfig {
 	for idx := range m.Resources {
 		id := m.Resources[idx].Id
 		objectConfig := ModelConfigObject{
-			Id: id,
+			Id:             id,
 			InstancesCount: "1",
 			Metadata: []ModelConfigMeta{
 				GetModelConfigMeta("object", "name", "model"),
@@ -69,9 +71,9 @@ func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair) ModelConfig {
 		}
 		for volumeIndex, idPair := range idPairs {
 			objectConfig.Volume[volumeIndex] = ModelConfigVolume{
-				XMLName:  xml.Name{},
-				FirstId:  strconv.Itoa(idPair.FirstId),
-				LastId:   strconv.Itoa(idPair.LastId),
+				XMLName: xml.Name{},
+				FirstId: strconv.Itoa(idPair.FirstId),
+				LastId:  strconv.Itoa(idPair.LastId),
 				Metadata: []ModelConfigMeta{
 					GetModelConfigMeta("volume", "name", b.Names[volumeIndex]),
 					GetModelConfigMeta("volume", "volume_type", "ModelPart"),
