@@ -179,6 +179,8 @@ func (m *Mesh) AddCustomSupports(rle *util.RLE) {
 		// block support (currentSupported == 0): "8"
 		if currentSupported > 0 {
 			m.Triangles[triIdx].CustomSupports = "4"
+		} else {
+			m.Triangles[triIdx].CustomSupports = "8"
 		}
 		currentRunLength--
 	}
