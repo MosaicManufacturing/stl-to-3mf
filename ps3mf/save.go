@@ -354,7 +354,7 @@ func (b *Bundle) Save(path string) (err error) {
 				return
 			}
 
-			if _, writeErr := io.WriteString(fileWriter, string(output)); writeErr != nil {
+			if _, writeErr := fileWriter.Write(output); writeErr != nil {
 				err = writeErr
 				return
 			}
@@ -379,7 +379,7 @@ func (b *Bundle) Save(path string) (err error) {
 			err = writerErr
 			return
 		}
-		if _, writeErr := io.WriteString(fileWriter, b.Config); writeErr != nil {
+		if _, writeErr := fileWriter.Write(b.Config); writeErr != nil {
 			err = writeErr
 			return
 		}
@@ -397,7 +397,7 @@ func (b *Bundle) Save(path string) (err error) {
 		err = writerErr
 		return
 	}
-	if _, writeErr := io.WriteString(fileWriter, string(output)); writeErr != nil {
+	if _, writeErr := fileWriter.Write(output); writeErr != nil {
 		err = writeErr
 		return
 	}
