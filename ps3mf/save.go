@@ -397,6 +397,10 @@ func (b *Bundle) Save(path string) (err error) {
 		err = writerErr
 		return
 	}
+	if _, writeErr := io.WriteString(fileWriter, xml.Header); writeErr != nil {
+		err = writeErr
+		return
+	}
 	if _, writeErr := fileWriter.Write(output); writeErr != nil {
 		err = writeErr
 		return
