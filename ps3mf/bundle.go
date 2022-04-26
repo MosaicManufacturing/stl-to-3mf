@@ -37,7 +37,7 @@ type Bundle struct {
 	WipeIntoModel  []bool
 	BoundingBox    util.BoundingBox
 
-	Config string
+	Config []byte
 }
 
 func NewBundle() Bundle {
@@ -51,7 +51,6 @@ func NewBundle() Bundle {
 		WipeIntoInfill: make([]bool, 0),
 		WipeIntoModel:  make([]bool, 0),
 		BoundingBox:    util.NewBoundingBox(),
-		Config:         "",
 	}
 }
 
@@ -60,7 +59,7 @@ func (b *Bundle) LoadConfig(path string) error {
 	if err != nil {
 		return err
 	}
-	b.Config = string(bytes)
+	b.Config = bytes
 	return nil
 }
 

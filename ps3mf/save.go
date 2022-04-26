@@ -179,6 +179,8 @@ func (m *Mesh) AddCustomSupports(rle *util.RLE) {
 		// block support (currentSupported == 0): "8"
 		if currentSupported > 0 {
 			m.Triangles[triIdx].CustomSupports = "4"
+		} else {
+			m.Triangles[triIdx].CustomSupports = "8"
 		}
 		currentRunLength--
 	}
@@ -354,7 +356,7 @@ func (b *Bundle) Save(path string) (err error) {
 				return
 			}
 
-			if _, writeErr := io.WriteString(fileWriter, string(output)); writeErr != nil {
+			if _, writeErr := fileWriter.Write(output); writeErr != nil {
 				err = writeErr
 				return
 			}
@@ -379,7 +381,7 @@ func (b *Bundle) Save(path string) (err error) {
 			err = writerErr
 			return
 		}
-		if _, writeErr := io.WriteString(fileWriter, b.Config); writeErr != nil {
+		if _, writeErr := fileWriter.Write(b.Config); writeErr != nil {
 			err = writeErr
 			return
 		}
@@ -397,7 +399,11 @@ func (b *Bundle) Save(path string) (err error) {
 		err = writerErr
 		return
 	}
-	if _, writeErr := io.WriteString(fileWriter, string(output)); writeErr != nil {
+	if _, writeErr := io.WriteString(fileWriter, xml.Header); writeErr != nil {
+		err = writeErr
+		return
+	}
+	if _, writeErr := fileWriter.Write(output); writeErr != nil {
 		err = writeErr
 		return
 	}
