@@ -1,0 +1,13 @@
+name: Build
+description: Compile binaries
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v3
+    - run: GOOS=linux GOARCH=amd64 go build
+      shell: bash
+    - uses: actions/upload-artifact@v3
+      with:
+        name: stl-to-3mf
+        path: stl-to-3mf
+        retention-days: 1

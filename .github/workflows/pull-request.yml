@@ -1,0 +1,26 @@
+name: PR Workflow
+
+on:
+  pull_request:
+
+jobs:
+  licensebot:
+    name: Licensebot Check
+    runs-on: ubuntu-latest
+    # if source branch is development or production, there will already be jobs from
+    # the "push" workflow associated with this PR, so nothing needs to be re-run
+    if: github.head_ref != 'development' && github.head_ref != 'production'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/license-check
+
+  build:
+    name: Compile
+    runs-on: ubuntu-latest
+    # if source branch is development or production, there will already be jobs from
+    # the "push" workflow associated with this PR, so nothing needs to be re-run
+    if: github.head_ref != 'development' && github.head_ref != 'production'
+    needs: ['licensebot']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/build

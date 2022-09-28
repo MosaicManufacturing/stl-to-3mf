@@ -1,0 +1,67 @@
+name: Build and Deploy (dev)
+
+on:
+  push:
+    branches: ['development']
+
+env:
+  DEPLOY_ENV: development
+
+jobs:
+  licensebot:
+    name: Licensebot Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/license-check
+
+  build:
+    name: Compile
+    runs-on: ubuntu-latest
+    needs: ['licensebot']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/build
+
+  deploy:
+    name: Upload binary
+    environment: development
+    concurrency: deploy_dev
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    needs: ['build']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: stl-to-3mf
+      - uses: ./.github/actions/s3-upload
+        with:
+          aws-role: ${{secrets.AWS_ROLE}}
+          aws-region: ${{secrets.AWS_REGION}}
+          s3-bucket: ${{secrets.S3_BUCKET}}
+          s3-key: go-utils/stl-to-3mf-${{env.DEPLOY_ENV}}
+          binary-name: stl-to-3mf
+
+  licensebot_trigger:
+    name: Trigger Licensebot
+    environment: development
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    concurrency: licensebot_trigger_dev
+    needs: ['deploy']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/license-publish
+        with:
+          deploy-env: ${{env.DEPLOY_ENV}}
+          aws-role: ${{secrets.AWS_ROLE}}
+          aws-region: ${{secrets.AWS_REGION}}
+          function-name: ${{secrets.LICENSEBOT_ARN}}
+          s3-source-bucket: ${{secrets.LICENSEBOT_S3_SOURCE_BUCKET}}
+          s3-source-key: ${{env.DEPLOY_ENV}}/stl-to-3mf.json
+          s3-output-bucket: ${{secrets.LICENSEBOT_S3_OUTPUT_BUCKET}}

@@ -1,0 +1,44 @@
+name: Update Licensebot
+description: Upload license bundle and trigger Licensebot
+inputs:
+  deploy-env:
+    description: DEPLOY_ENV
+    type: string
+    required: true
+  aws-role:
+    description: IAM role to assume
+    type: string
+    required: true
+  aws-region:
+    description: AWS_REGION
+    type: string
+    required: true
+  function-name:
+    description: Lambda function name or ARN
+    type: string
+    required: true
+  s3-source-bucket:
+    description: S3 bucket where licenses.json will be uploaded
+    type: string
+    required: true
+  s3-source-key:
+    description: S3 key where licenses.json will be uploaded
+    type: string
+    required: true
+  s3-output-bucket:
+    description: S3 bucket where Licensebot will output the bundle
+    type: string
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v3
+    - uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{inputs.aws-role}}
+        aws-region: ${{inputs.aws-region}}
+    - run: aws s3 cp ./licenses.json s3://${{inputs.s3-source-bucket}}/${{inputs.s3-source-key}}
+      shell: bash
+    - run: |
+        aws lambda invoke --function-name ${{inputs.function-name}} --cli-binary-format raw-in-base64-out --payload '{ "DEPLOY_ENV": "${{inputs.deploy-env}}", "sourceBucket": "${{inputs.s3-source-bucket}}", "outputBucket": "${{inputs.s3-output-bucket}}" }' outfile.txt
+      shell: bash

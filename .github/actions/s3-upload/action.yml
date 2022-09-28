@@ -1,0 +1,33 @@
+name: S3 Upload
+description: Upload binary to S3
+inputs:
+  aws-role:
+    description: IAM role to assume
+    type: string
+    required: true
+  aws-region:
+    description: AWS_REGION
+    type: string
+    required: true
+  s3-bucket:
+    description: S3 target bucket
+    type: string
+    required: true
+  s3-key:
+    description: S3 target key
+    type: string
+    required: true
+  binary-name:
+    description: Binary file name
+    type: string
+    required: false
+    default: ps-postprocess
+runs:
+  using: composite
+  steps:
+    - uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{inputs.aws-role}}
+        aws-region: ${{inputs.aws-region}}
+    - run: aws s3 cp ./${{inputs.binary-name}} s3://${{inputs.s3-bucket}}/${{inputs.s3-key}}
+      shell: bash
