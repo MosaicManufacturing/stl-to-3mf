@@ -388,8 +388,8 @@ func (b *Bundle) Save(path string) (err error) {
 	}
 
 	// generate and write in Metadata/Slic3r_PE_model.config
-	modelConfig := b.GetModelConfig(&model, idPairs)
-	output, marshalErr := xml.Marshal(modelConfig)
+	modelConfig := b.GetModelConfig(&model, idPairs, path)
+	output, marshalErr := modelConfig.Marshal()
 	if marshalErr != nil {
 		err = marshalErr
 		return

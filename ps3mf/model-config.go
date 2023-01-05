@@ -1,7 +1,9 @@
 package ps3mf
 
 import (
+	"bytes"
 	"encoding/xml"
+	"path"
 	"strconv"
 )
 
@@ -28,6 +30,7 @@ type ModelConfigVolume struct {
 	FirstId  string            `xml:"firstid,attr"`
 	LastId   string            `xml:"lastid,attr"`
 	Metadata []ModelConfigMeta `xml:"metadata"`
+	Mesh     ModelConfigMesh   `xml:"mesh"`
 }
 
 type ModelConfigMeta struct {
@@ -35,6 +38,15 @@ type ModelConfigMeta struct {
 	Type    string   `xml:"type,attr"`
 	Key     string   `xml:"key,attr"`
 	Value   string   `xml:"value,attr"`
+}
+
+type ModelConfigMesh struct {
+	XMLName          xml.Name `xml:"mesh"`
+	EdgesFixed       string   `xml:"edges_fixed,attr"`
+	DegenerateFacets string   `xml:"degenerate_facets,attr"`
+	FacetsRemoved    string   `xml:"facets_removed,attr"`
+	FacetsReversed   string   `xml:"facets_reversed,attr"`
+	BackwardsEdges   string   `xml:"backwards_edges,attr"`
 }
 
 func GetModelConfigMeta(typ, key, value string) ModelConfigMeta {
@@ -45,6 +57,16 @@ func GetModelConfigMeta(typ, key, value string) ModelConfigMeta {
 	}
 }
 
+func GetModelConfigMesh() ModelConfigMesh {
+	return ModelConfigMesh{
+		EdgesFixed:       "0",
+		DegenerateFacets: "0",
+		FacetsRemoved:    "0",
+		FacetsReversed:   "0",
+		BackwardsEdges:   "0",
+	}
+}
+
 func boolToIntString(b bool) string {
 	if b {
 		return "1"
@@ -52,7 +74,7 @@ func boolToIntString(b bool) string {
 	return "0"
 }
 
-func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair) ModelConfig {
+func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair, outpath string) ModelConfig {
 	config := ModelConfig{
 		Objects: make([]ModelConfigObject, 0, len(b.Model.Resources.Objects)),
 	}
@@ -79,13 +101,31 @@ func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair) ModelConfig {
 					GetModelConfigMeta("volume", "volume_type", "ModelPart"),
 					// use identity matrix since vertices are already transformed
 					GetModelConfigMeta("volume", "matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
+					GetModelConfigMeta("volume", "source_file", path.Base(outpath)),
 					GetModelConfigMeta("volume", "source_object_id", strconv.Itoa(volumeIndex)),
 					GetModelConfigMeta("volume", "source_volume_id", "0"),
+					GetModelConfigMeta("volume", "source_offset_x", "0"),
+					GetModelConfigMeta("volume", "source_offset_y", "0"),
+					GetModelConfigMeta("volume", "source_offset_z", "0"),
 					GetModelConfigMeta("volume", "extruder", b.Extruders[volumeIndex]),
 				},
+				Mesh: GetModelConfigMesh(),
 			}
 		}
 		config.Objects = append(config.Objects, objectConfig)
 	}
 	return config
+}
+
+func (m *ModelConfig) Marshal() ([]byte, error) {
+	output, marshalErr := xml.MarshalIndent(m, "", " ")
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
+	// replace self-closing tags
+	output = bytes.ReplaceAll(output, []byte("></metadata>"), []byte("/>"))
+	output = bytes.ReplaceAll(output, []byte("></mesh>"), []byte("/>"))
+	// add trailing newline
+	output = append(output, '\n')
+	return output, nil
 }
