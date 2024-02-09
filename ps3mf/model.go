@@ -2,6 +2,7 @@ package ps3mf
 
 import (
 	"bufio"
+	"encoding/json"
 	"encoding/xml"
 	"github.com/hpinc/go3mf"
 	"github.com/hpinc/go3mf/importer/stl"
@@ -9,6 +10,30 @@ import (
 	"mosaicmfg.com/stl-to-3mf/util"
 	"os"
 )
+
+// FilamentIDMap contains a mappingfrom project input index to Element filamentId
+// (only used for Element processing)
+type FilamentIDMap map[byte]byte
+
+type filamentIDJsonData struct {
+	IDs [][]byte `json:"filamentIds"`
+}
+
+func UnmarshalFilamentIds(serialized string) (FilamentIDMap, error) {
+	var parsed filamentIDJsonData
+	if err := json.Unmarshal([]byte(serialized), &parsed); err != nil {
+		return nil, err
+	}
+
+	ids := make(FilamentIDMap)
+	for _, pair := range parsed.IDs {
+		key := pair[0]
+		value := pair[1]
+		ids[key] = value
+	}
+
+	return ids, nil
+}
 
 type ModelOpts struct {
 	Name           string
@@ -68,7 +93,7 @@ func addDefaultMetadata(model *go3mf.Model) {
 	model.Metadata = append(model.Metadata, getMetadataElement("Application", "Canvas"))
 }
 
-func STLtoModel(opts ModelOpts) (model Model, err error) {
+func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (model Model, err error) {
 	model = Model{
 		Name:           opts.Name,
 		Model:          new(go3mf.Model),
@@ -111,7 +136,7 @@ func STLtoModel(opts ModelOpts) (model Model, err error) {
 
 	// load RLE data
 	if opts.ColorsPath != "" {
-		colors, colorsErr := util.LoadRLE(opts.ColorsPath)
+		colors, colorsErr := util.LoadRLE(opts.ColorsPath, filamentIds)
 		if colorsErr != nil {
 			err = colorsErr
 			return
@@ -119,7 +144,7 @@ func STLtoModel(opts ModelOpts) (model Model, err error) {
 		model.Colors = colors
 	}
 	if opts.SupportsPath != "" {
-		supports, supportsErr := util.LoadRLE(opts.SupportsPath)
+		supports, supportsErr := util.LoadRLE(opts.SupportsPath, nil)
 		if supportsErr != nil {
 			err = supportsErr
 			return
