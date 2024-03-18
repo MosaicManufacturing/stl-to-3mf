@@ -7,18 +7,19 @@ import (
 	"os"
 )
 
-// stl-to-3mf outpath.3mf inpath.config <models>
+// stl-to-3mf outpath.3mf inpath.config filamentIdsJson <models>
 //
 //   <models>: <model> [<model> [...]]
 //   <model>:  [--colors colors.rle] [--supports supports.rle] name transforms extruder wipeIntoInfill wipeIntoModel model1.stl [...]
 
 type Opts struct {
-	Models     []ps3mf.ModelOpts
-	OutPath    string
-	ConfigPath string
+	Models      []ps3mf.ModelOpts
+	OutPath     string
+	ConfigPath  string
+	FilamentIDs ps3mf.FilamentIDMap
 }
 
-func getOpts() Opts {
+func getOpts() (Opts, error) {
 	argv := os.Args[1:]
 	argc := len(argv)
 
@@ -26,7 +27,14 @@ func getOpts() Opts {
 
 	opts.OutPath = argv[0]
 	opts.ConfigPath = argv[1]
-	for i := 2; i < argc; {
+	if argv[2] != "nil" {
+		idsMap, err := ps3mf.UnmarshalFilamentIds(argv[2])
+		if err != nil {
+			return opts, err
+		}
+		opts.FilamentIDs = idsMap
+	}
+	for i := 3; i < argc; {
 		modelOpts := ps3mf.ModelOpts{}
 		if argv[i] == "--colors" {
 			i++
@@ -52,11 +60,14 @@ func getOpts() Opts {
 		i++
 		opts.Models = append(opts.Models, modelOpts)
 	}
-	return opts
+	return opts, nil
 }
 
 func run() {
-	opts := getOpts()
+	opts, err := getOpts()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	bundle := ps3mf.NewBundle()
 	if err := bundle.LoadConfig(opts.ConfigPath); err != nil {
@@ -64,7 +75,7 @@ func run() {
 	}
 
 	for _, modelOpts := range opts.Models {
-		model, err := ps3mf.STLtoModel(modelOpts)
+		model, err := ps3mf.STLtoModel(modelOpts, opts.FilamentIDs)
 		if err != nil {
 			log.Fatalln(err)
 		}
