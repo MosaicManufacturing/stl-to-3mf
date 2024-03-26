@@ -1,5 +1,6 @@
 name: Build
 description: Compile binaries
+inputs:
   os:
     description: The GO OS to build the binary for
     type: string
