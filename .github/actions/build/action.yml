@@ -27,6 +27,6 @@ runs:
       with:
         name: stl-to-3mf${{inputs.build-suffix}}
         path: |
-          stl-to-3mf${{input.build-suffix}}
-          stl-to-3mf${{input.build-suffix}}.exe
+          stl-to-3mf${{inputs.build-suffix}}
+          stl-to-3mf${{inputs.build-suffix}}.exe
         retention-days: 1
