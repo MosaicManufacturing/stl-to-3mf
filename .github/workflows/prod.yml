@@ -25,6 +25,7 @@ jobs:
       - uses: ./.github/actions/build
         with:
           os: windows
+          build-suffix: .exe
       - uses: ./.github/actions/build
         with:
           os: darwin

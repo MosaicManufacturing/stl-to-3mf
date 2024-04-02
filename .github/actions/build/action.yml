@@ -12,7 +12,7 @@ inputs:
     required: false
     default: amd64
   build-suffix:
-    description: The suffic to add to the built binary and its artifact upload
+    description: The suffix to add to the built binary and its artifact upload
     type: string
     required: false
     default: ''
@@ -26,7 +26,5 @@ runs:
     - uses: actions/upload-artifact@v3
       with:
         name: stl-to-3mf${{inputs.build-suffix}}
-        path: |
-          stl-to-3mf${{inputs.build-suffix}}
-          stl-to-3mf${{inputs.build-suffix}}.exe
+        path: stl-to-3mf${{inputs.build-suffix}}
         retention-days: 1
