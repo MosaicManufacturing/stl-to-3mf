@@ -70,7 +70,7 @@ jobs:
       - name: Upload binaries to S3 if does not exist
         run: |
           EXISTS=true
-          aws s3 ls s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/linux/amd64/stl-to-3mf || aws s3 ls s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}}/windows/amd64/stl-to-3mf.exe || aws s3 ls s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}}/darwin/amd64/stl-to-3mf || EXISTS=false
+          aws s3 ls s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/linux/amd64/stl-to-3mf || aws s3 ls s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/windows/amd64/stl-to-3mf.exe || aws s3 ls s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/darwin/amd64/stl-to-3mf || EXISTS=false
           if [ $EXISTS == true ]; then
             echo "Library version already exists."
             exit 1
