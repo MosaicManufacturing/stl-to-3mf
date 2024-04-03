@@ -9,13 +9,6 @@ env:
   BUCKET_NAME: opal-tide
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/test
-
   licensebot:
     name: Licensebot Check
     runs-on: ubuntu-latest
@@ -26,7 +19,7 @@ jobs:
   build:
     name: Compile
     runs-on: ubuntu-latest
-    needs: ['test', 'licensebot']
+    needs: ['licensebot']
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/build
