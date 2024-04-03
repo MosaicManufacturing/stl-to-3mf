@@ -22,14 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/build
-      - uses: ./.github/actions/build
-        with:
-          os: windows
-          build-suffix: .exe
-      - uses: ./.github/actions/build
-        with:
-          os: darwin
-          build-suffix: -darwin
 
   deploy:
     name: Upload binary
@@ -45,36 +37,13 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: stl-to-3mf
-      - uses: actions/download-artifact@v3
-        with:
-          name: stl-to-3mf.exe
-      - uses: actions/download-artifact@v3
-        with:
-          name: stl-to-3mf-darwin
       - uses: ./.github/actions/s3-upload
-        name: Upload Linux Artifact
         with:
           aws-role: ${{secrets.AWS_ROLE}}
           aws-region: ${{secrets.AWS_REGION}}
           s3-bucket: ${{secrets.S3_BUCKET}}
           s3-key: go-utils/stl-to-3mf-${{env.DEPLOY_ENV}}
           binary-name: stl-to-3mf
-      - uses: ./.github/actions/s3-upload
-        name: Upload Windows Artifact
-        with:
-          aws-role: ${{secrets.AWS_ROLE}}
-          aws-region: ${{secrets.AWS_REGION}}
-          s3-bucket: ${{secrets.S3_BUCKET}}
-          s3-key: go-utils/stl-to-3mf-windows-${{env.DEPLOY_ENV}}
-          binary-name: stl-to-3mf.exe
-      - uses: ./.github/actions/s3-upload
-        name: Upload MacOS Artifact
-        with:
-          aws-role: ${{secrets.AWS_ROLE}}
-          aws-region: ${{secrets.AWS_REGION}}
-          s3-bucket: ${{secrets.S3_BUCKET}}
-          s3-key: go-utils/stl-to-3mf-darwin-${{env.DEPLOY_ENV}}
-          binary-name: stl-to-3mf-darwin
 
   licensebot_trigger:
     name: Trigger Licensebot
