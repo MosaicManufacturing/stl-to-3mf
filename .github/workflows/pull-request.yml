@@ -24,3 +24,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/build
+
+  checkversion:
+    name: Check Version was updated
+    runs-on: ubuntu-latest
+    if: github.head_ref != 'development' && github.head_ref != 'production'
+    steps:
+      - name: Check if version file was updated
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@v44
+        with:
+          files_yaml: |
+            version:
+              - version.txt
+      - name: Run step if test file(s) change
+        if: steps.changed-files-yaml.outputs.version_any_changed == 'false'  
+        run: |
+          echo "Did not update version.txt"
+          exit 1

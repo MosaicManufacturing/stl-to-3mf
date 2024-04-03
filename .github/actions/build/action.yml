@@ -1,13 +1,30 @@
 name: Build
 description: Compile binaries
+inputs:
+  os:
+    description: The GO OS to build the binary for
+    type: string
+    required: false
+    default: linux
+  arch:
+    description: The GO ARCH to build the binary for
+    type: string
+    required: false
+    default: amd64
+  build-suffix:
+    description: The suffix to add to the built binary and its artifact upload
+    type: string
+    required: false
+    default: ''
+
 runs:
   using: composite
   steps:
     - uses: actions/setup-go@v3
-    - run: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build
+    - run: GOOS=${{inputs.os}} GOARCH=${{inputs.arch}} CGO_ENABLED=0 go build -o stl-to-3mf${{inputs.build-suffix}}
       shell: bash
     - uses: actions/upload-artifact@v3
       with:
-        name: stl-to-3mf
-        path: stl-to-3mf
+        name: stl-to-3mf${{inputs.build-suffix}}
+        path: stl-to-3mf${{inputs.build-suffix}}
         retention-days: 1
