@@ -77,6 +77,6 @@ jobs:
           fi
           echo "Existing version has not been published"
           aws s3 cp ./stl-to-3mf s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/linux/amd64/stl-to-3mf
-          aws s3 cp ./stl-to-3mf.exe s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}}/windows/amd64/stl-to-3mf.exe
-          aws s3 cp ./stl-to-3mf-darwin s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}}/darwin/amd64/stl-to-3mf
-          aws s3 cp ./licenses.json s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}}/licenses.json
+          aws s3 cp ./stl-to-3mf.exe s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/windows/amd64/stl-to-3mf.exe
+          aws s3 cp ./stl-to-3mf-darwin s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/darwin/amd64/stl-to-3mf
+          aws s3 cp ./licenses.json s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/licenses.json
