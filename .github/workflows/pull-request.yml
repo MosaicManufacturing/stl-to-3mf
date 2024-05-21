@@ -11,7 +11,7 @@ jobs:
     # the "push" workflow associated with this PR, so nothing needs to be re-run
     if: github.head_ref != 'development' && github.head_ref != 'production'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/license-check
 
   build:
@@ -22,7 +22,7 @@ jobs:
     if: github.head_ref != 'development' && github.head_ref != 'production'
     needs: ['licensebot']
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/build
 
   checkversion:

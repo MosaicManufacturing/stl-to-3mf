@@ -13,7 +13,7 @@ jobs:
     name: Licensebot Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/license-check
 
   build:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: ['licensebot']
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/build
       - uses: ./.github/actions/build
         with:
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: ['build']
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v3
         with:
           name: stl-to-3mf
