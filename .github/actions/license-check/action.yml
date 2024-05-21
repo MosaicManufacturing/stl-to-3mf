@@ -3,7 +3,7 @@ description: Check dependency licenses
 runs:
   using: composite
   steps:
-    - uses: actions/setup-go@v3
+    - uses: actions/setup-go@v5
     - run: echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
       shell: bash
     - run: echo "PATH=${PATH}:$(go env GOPATH)/bin" >> $GITHUB_ENV
