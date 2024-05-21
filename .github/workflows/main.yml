@@ -43,13 +43,13 @@ jobs:
     needs: ['build']
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: stl-to-3mf
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: stl-to-3mf.exe
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: stl-to-3mf-darwin
       - name: Get Version
