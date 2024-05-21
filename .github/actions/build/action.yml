@@ -23,7 +23,7 @@ runs:
     - uses: actions/setup-go@v5
     - run: GOOS=${{inputs.os}} GOARCH=${{inputs.arch}} CGO_ENABLED=0 go build -o stl-to-3mf${{inputs.build-suffix}}
       shell: bash
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: stl-to-3mf${{inputs.build-suffix}}
         path: stl-to-3mf${{inputs.build-suffix}}
