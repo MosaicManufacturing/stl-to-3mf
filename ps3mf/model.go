@@ -68,8 +68,8 @@ func addDefaultMetadata(model *go3mf.Model) {
 	model.Metadata = append(model.Metadata, getMetadataElement("Application", "Canvas"))
 }
 
-func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (model Model, err error) {
-	model = Model{
+func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (Model, error) {
+	model := Model{
 		Name:           opts.Name,
 		Model:          new(go3mf.Model),
 		Transforms:     util.Matrix4{},
@@ -81,53 +81,47 @@ func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (model Model, err err
 	}
 
 	// load the STL file using 3MF conversion
-	file, openErr := os.Open(opts.MeshPath)
-	if openErr != nil {
-		err = openErr
-		return
+	file, err := os.Open(opts.MeshPath)
+	if err != nil {
+		return model, err
 	}
-	defer func() {
-		if closeErr := file.Close(); closeErr != nil {
-			err = closeErr
-		}
-	}()
+
 	reader := bufio.NewReader(file)
 	decoder := stl.NewDecoder(reader)
-	if decodeErr := decoder.Decode(model.Model); decodeErr != nil {
-		err = decodeErr
-		return
+	if err = decoder.Decode(model.Model); err != nil {
+		return model, err
 	}
 
 	// add stock PS metadata
 	addDefaultMetadata(model.Model)
 
 	// decode transforms matrix
-	matrix, matrixErr := util.UnserializeMatrix4(opts.Transforms)
-	if matrixErr != nil {
-		err = matrixErr
-		return
+	matrix, err := util.UnserializeMatrix4(opts.Transforms)
+	if err != nil {
+		return model, err
 	}
 	model.Transforms = matrix
 
 	// load RLE data
 	if opts.ColorsPath != "" {
-		colors, colorsErr := util.LoadRLE(opts.ColorsPath, filamentIds)
-		if colorsErr != nil {
-			err = colorsErr
-			return
+		colors, err := util.LoadRLE(opts.ColorsPath, filamentIds)
+		if err != nil {
+			return model, err
 		}
 		model.Colors = colors
 	}
 	if opts.SupportsPath != "" {
-		supports, supportsErr := util.LoadRLE(opts.SupportsPath, nil)
-		if supportsErr != nil {
-			err = supportsErr
-			return
+		supports, err := util.LoadRLE(opts.SupportsPath, nil)
+		if err != nil {
+			return model, err
 		}
 		model.Supports = supports
 	}
 
-	return
+	if err = file.Close(); err != nil {
+		return model, err
+	}
+	return model, nil
 }
 
 func (m *Model) GetTransformedBbox() util.BoundingBox {
