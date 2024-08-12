@@ -2,38 +2,16 @@ package ps3mf
 
 import (
 	"bufio"
-	"encoding/json"
+	"bytes"
 	"encoding/xml"
 	"github.com/hpinc/go3mf"
 	"github.com/hpinc/go3mf/importer/stl"
 	"github.com/hpinc/go3mf/spec"
+	"io"
+	"io/ioutil"
 	"mosaicmfg.com/stl-to-3mf/util"
 	"os"
 )
-
-// FilamentIDMap contains a mappingfrom project input index to Element filamentId
-// (only used for Element processing)
-type FilamentIDMap map[byte]byte
-
-type filamentIDJsonData struct {
-	IDs [][]byte `json:"filamentIds"`
-}
-
-func UnmarshalFilamentIds(serialized string) (FilamentIDMap, error) {
-	var parsed filamentIDJsonData
-	if err := json.Unmarshal([]byte(serialized), &parsed); err != nil {
-		return nil, err
-	}
-
-	ids := make(FilamentIDMap)
-	for _, pair := range parsed.IDs {
-		key := pair[0]
-		value := pair[1]
-		ids[key] = value
-	}
-
-	return ids, nil
-}
 
 type ModelOpts struct {
 	Name           string
@@ -75,6 +53,11 @@ func (n xmlns) Marshal3MFAttr(spec.Encoder) ([]xml.Attr, error) {
 
 const slic3rPENamespace = "http://schemas.slic3r.org/3mf/2017/06"
 
+// minimum size of a closed mesh in binary STL is 284 bytes,
+// but go3mf incorrectly notes that the minimum is 384 bytes,
+// and requires at least 300 bytes in each STL file
+const go3mfMinHeaderSize = 300
+
 func getSlicerPENamespace() spec.MarshalerAttr {
 	return xmlns{slic3rPENamespace}
 }
@@ -93,8 +76,8 @@ func addDefaultMetadata(model *go3mf.Model) {
 	model.Metadata = append(model.Metadata, getMetadataElement("Application", "Canvas"))
 }
 
-func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (model Model, err error) {
-	model = Model{
+func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (Model, error) {
+	model := Model{
 		Name:           opts.Name,
 		Model:          new(go3mf.Model),
 		Transforms:     util.Matrix4{},
@@ -106,53 +89,67 @@ func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (model Model, err err
 	}
 
 	// load the STL file using 3MF conversion
-	file, openErr := os.Open(opts.MeshPath)
-	if openErr != nil {
-		err = openErr
-		return
+	file, err := os.Open(opts.MeshPath)
+	if err != nil {
+		return model, err
 	}
-	defer func() {
-		if closeErr := file.Close(); closeErr != nil {
-			err = closeErr
+
+	var reader io.Reader
+
+	stat, err := file.Stat()
+	if err != nil {
+		return model, err
+	}
+	fileSize := stat.Size() // bytes
+	if fileSize < go3mfMinHeaderSize {
+		// handle STL files too small for go3mf to process (even if they contain
+		// enough triangles to be valid) by padding the file with 0s to achieve
+		// the minimum length go3mf requires
+		content, err := ioutil.ReadAll(file)
+		if err != nil {
+			return model, err
 		}
-	}()
-	reader := bufio.NewReader(file)
+		content = append(content, make([]byte, go3mfMinHeaderSize-len(content))...)
+		reader = bytes.NewReader(content)
+	} else {
+		reader = bufio.NewReader(file)
+	}
+
 	decoder := stl.NewDecoder(reader)
-	if decodeErr := decoder.Decode(model.Model); decodeErr != nil {
-		err = decodeErr
-		return
+	if err = decoder.Decode(model.Model); err != nil {
+		return model, err
 	}
 
 	// add stock PS metadata
 	addDefaultMetadata(model.Model)
 
 	// decode transforms matrix
-	matrix, matrixErr := util.UnserializeMatrix4(opts.Transforms)
-	if matrixErr != nil {
-		err = matrixErr
-		return
+	matrix, err := util.UnserializeMatrix4(opts.Transforms)
+	if err != nil {
+		return model, err
 	}
 	model.Transforms = matrix
 
 	// load RLE data
 	if opts.ColorsPath != "" {
-		colors, colorsErr := util.LoadRLE(opts.ColorsPath, filamentIds)
-		if colorsErr != nil {
-			err = colorsErr
-			return
+		colors, err := util.LoadRLE(opts.ColorsPath, filamentIds)
+		if err != nil {
+			return model, err
 		}
 		model.Colors = colors
 	}
 	if opts.SupportsPath != "" {
-		supports, supportsErr := util.LoadRLE(opts.SupportsPath, nil)
-		if supportsErr != nil {
-			err = supportsErr
-			return
+		supports, err := util.LoadRLE(opts.SupportsPath, nil)
+		if err != nil {
+			return model, err
 		}
 		model.Supports = supports
 	}
 
-	return
+	if err = file.Close(); err != nil {
+		return model, err
+	}
+	return model, nil
 }
 
 func (m *Model) GetTransformedBbox() util.BoundingBox {
