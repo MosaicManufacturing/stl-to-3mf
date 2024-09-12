@@ -5,9 +5,6 @@ on:
     branches: ['main']
   workflow_dispatch:
 
-env:
-  BUCKET_NAME: opal-tide
-
 jobs:
   licensebot:
     name: Licensebot Check
@@ -61,15 +58,17 @@ jobs:
           role-to-assume: ${{secrets.AWS_ROLE}}
           aws-region: ${{secrets.AWS_REGION}}
       - name: Upload binaries to S3 if does not exist
+        env: 
+          S3_PATH: s3://${{secrets.S3_BUCKET}}/stl-to-3mf/${{steps.get-version.outputs.version}}
         run: |
           EXISTS=true
-          aws s3 ls s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/linux/amd64/stl-to-3mf || aws s3 ls s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/windows/amd64/stl-to-3mf.exe || aws s3 ls s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/darwin/amd64/stl-to-3mf || EXISTS=false
+          aws s3 ls ${{env.S3_PATH}}/linux/amd64/stl-to-3mf || aws s3 ls ${{env.S3_PATH}}/windows/amd64/stl-to-3mf.exe || aws s3 ls ${{env.S3_PATH}}/darwin/amd64/stl-to-3mf || EXISTS=false
           if [ $EXISTS == true ]; then
             echo "Library version already exists."
             exit 1
           fi
           echo "Existing version has not been published"
-          aws s3 cp ./stl-to-3mf s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/linux/amd64/stl-to-3mf
-          aws s3 cp ./stl-to-3mf.exe s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/windows/amd64/stl-to-3mf.exe
-          aws s3 cp ./stl-to-3mf-darwin s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/darwin/amd64/stl-to-3mf
-          aws s3 cp ./licenses.json s3://${{env.BUCKET_NAME}}/stl-to-3mf/${{steps.get-version.outputs.version}}/licenses.json
+          aws s3 cp /linux/amd64/stl-to-3mf
+          aws s3 cp ./stl-to-3mf.exe ${{env.S3_PATH}}/windows/amd64/stl-to-3mf.exe
+          aws s3 cp ./stl-to-3mf-darwin ${{env.S3_PATH}}/darwin/amd64/stl-to-3mf
+          aws s3 cp ./licenses.json ${{env.S3_PATH}}/licenses.json
