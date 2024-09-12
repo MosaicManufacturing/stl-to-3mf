@@ -68,7 +68,7 @@ jobs:
             exit 1
           fi
           echo "Existing version has not been published"
-          aws s3 cp /linux/amd64/stl-to-3mf
+          aws s3 cp ./stl-to-3mf ${{env.S3_PATH}}/linux/amd64/stl-to-3mf
           aws s3 cp ./stl-to-3mf.exe ${{env.S3_PATH}}/windows/amd64/stl-to-3mf.exe
           aws s3 cp ./stl-to-3mf-darwin ${{env.S3_PATH}}/darwin/amd64/stl-to-3mf
           aws s3 cp ./licenses.json ${{env.S3_PATH}}/licenses.json
