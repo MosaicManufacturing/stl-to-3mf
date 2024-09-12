@@ -7,9 +7,9 @@ jobs:
   licensebot:
     name: Licensebot Check
     runs-on: ubuntu-latest
-    # if source branch is development or production, there will already be jobs from
+    # if source branch is main, there will already be jobs from
     # the "push" workflow associated with this PR, so nothing needs to be re-run
-    if: github.head_ref != 'development' && github.head_ref != 'production'
+    if: github.head_ref != 'main'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/license-check
@@ -17,9 +17,9 @@ jobs:
   build:
     name: Compile
     runs-on: ubuntu-latest
-    # if source branch is development or production, there will already be jobs from
+    # if source branch is main, there will already be jobs from
     # the "push" workflow associated with this PR, so nothing needs to be re-run
-    if: github.head_ref != 'development' && github.head_ref != 'production'
+    if: github.head_ref != 'main'
     needs: ['licensebot']
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
   checkversion:
     name: Check Version was updated
     runs-on: ubuntu-latest
-    if: github.head_ref != 'development' && github.head_ref != 'production'
+    if: github.head_ref != 'main'
     steps:
       - name: Check if version file was updated
         id: changed-files-yaml
