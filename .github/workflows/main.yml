@@ -57,7 +57,7 @@ jobs:
         with:
           role-to-assume: ${{secrets.AWS_ROLE}}
           aws-region: ${{secrets.AWS_REGION}}
-      - name: Upload binaries to S3 if does not exist
+      - name: Upload binaries to S3 they do not exist
         env: 
           S3_PATH: s3://${{secrets.S3_BUCKET}}/stl-to-3mf/${{steps.get-version.outputs.version}}
         run: |
