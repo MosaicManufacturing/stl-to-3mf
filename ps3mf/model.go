@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/xml"
-	"github.com/hpinc/go3mf"
-	"github.com/hpinc/go3mf/importer/stl"
-	"github.com/hpinc/go3mf/spec"
+	"github.com/MosaicManufacturing/go3mf"
+	"github.com/MosaicManufacturing/go3mf/importer/stl"
+	"github.com/MosaicManufacturing/go3mf/spec"
+	"github.com/MosaicManufacturing/stl-to-3mf/util"
 	"io"
 	"io/ioutil"
-	"mosaicmfg.com/stl-to-3mf/util"
 	"os"
 )
 

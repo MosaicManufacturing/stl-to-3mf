@@ -3,7 +3,7 @@ package ps3mf
 import (
 	"archive/zip"
 	"encoding/xml"
-	"github.com/hpinc/go3mf"
+	"github.com/MosaicManufacturing/go3mf"
 	"io"
 	"io/ioutil"
 	"os"

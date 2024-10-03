@@ -2,7 +2,7 @@ package util
 
 import (
 	"fmt"
-	"github.com/hpinc/go3mf"
+	"github.com/MosaicManufacturing/go3mf"
 	"math"
 	"strconv"
 	"strings"

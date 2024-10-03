@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/MosaicManufacturing/stl-to-3mf/ps3mf"
 	"log"
-	"mosaicmfg.com/stl-to-3mf/ps3mf"
 	"os"
 )
 
