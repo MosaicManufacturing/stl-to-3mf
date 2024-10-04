@@ -8,7 +8,7 @@ import (
 	"github.com/MosaicManufacturing/go3mf"
 	"github.com/MosaicManufacturing/go3mf/importer/stl"
 	"github.com/MosaicManufacturing/go3mf/spec"
-	"github.com/MosaicManufacturing/stl-to-3mf/util"
+	"mosaicmfg.com/stl-to-3mf/util"
 )
 
 type ModelOpts struct {

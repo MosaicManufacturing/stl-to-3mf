@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"github.com/MosaicManufacturing/stl-to-3mf/util"
+
+	"mosaicmfg.com/stl-to-3mf/util"
 )
 
 type ModelXML struct {

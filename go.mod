@@ -1,4 +1,4 @@
-module github.com/MosaicManufacturing/stl-to-3mf
+module mosaicmfg.com/stl-to-3mf
 
 go 1.16
 
