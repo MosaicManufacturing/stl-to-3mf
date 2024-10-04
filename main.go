@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
-	"mosaicmfg.com/stl-to-3mf/ps3mf"
 	"os"
+
+	"mosaicmfg.com/stl-to-3mf/ps3mf"
 )
 
 // stl-to-3mf outpath.3mf inpath.config filamentIdsJson <models>

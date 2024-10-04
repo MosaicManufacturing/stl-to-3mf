@@ -2,9 +2,10 @@ package ps3mf
 
 import (
 	"encoding/xml"
-	"github.com/hpinc/go3mf"
-	"github.com/hpinc/go3mf/spec"
 	"io/ioutil"
+
+	"github.com/MosaicManufacturing/go3mf"
+	"github.com/MosaicManufacturing/go3mf/spec"
 	"mosaicmfg.com/stl-to-3mf/util"
 )
 

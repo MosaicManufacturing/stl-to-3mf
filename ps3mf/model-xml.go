@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+
 	"mosaicmfg.com/stl-to-3mf/util"
 )
 
