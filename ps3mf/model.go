@@ -2,15 +2,13 @@ package ps3mf
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/xml"
+	"os"
+
 	"github.com/MosaicManufacturing/go3mf"
 	"github.com/MosaicManufacturing/go3mf/importer/stl"
 	"github.com/MosaicManufacturing/go3mf/spec"
 	"github.com/MosaicManufacturing/stl-to-3mf/util"
-	"io"
-	"io/ioutil"
-	"os"
 )
 
 type ModelOpts struct {
@@ -53,11 +51,6 @@ func (n xmlns) Marshal3MFAttr(spec.Encoder) ([]xml.Attr, error) {
 
 const slic3rPENamespace = "http://schemas.slic3r.org/3mf/2017/06"
 
-// minimum size of a closed mesh in binary STL is 284 bytes,
-// but go3mf incorrectly notes that the minimum is 384 bytes,
-// and requires at least 300 bytes in each STL file
-const go3mfMinHeaderSize = 300
-
 func getSlicerPENamespace() spec.MarshalerAttr {
 	return xmlns{slic3rPENamespace}
 }
@@ -94,27 +87,7 @@ func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (Model, error) {
 		return model, err
 	}
 
-	var reader io.Reader
-
-	stat, err := file.Stat()
-	if err != nil {
-		return model, err
-	}
-	fileSize := stat.Size() // bytes
-	if fileSize < go3mfMinHeaderSize {
-		// handle STL files too small for go3mf to process (even if they contain
-		// enough triangles to be valid) by padding the file with 0s to achieve
-		// the minimum length go3mf requires
-		content, err := ioutil.ReadAll(file)
-		if err != nil {
-			return model, err
-		}
-		content = append(content, make([]byte, go3mfMinHeaderSize-len(content))...)
-		reader = bytes.NewReader(content)
-	} else {
-		reader = bufio.NewReader(file)
-	}
-
+	reader := bufio.NewReader(file)
 	decoder := stl.NewDecoder(reader)
 	if err = decoder.Decode(model.Model); err != nil {
 		return model, err
