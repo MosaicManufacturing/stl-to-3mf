@@ -3,6 +3,7 @@ package ps3mf
 import (
 	"bufio"
 	"encoding/xml"
+	"errors"
 	"os"
 
 	"github.com/MosaicManufacturing/go3mf"
@@ -69,6 +70,11 @@ func addDefaultMetadata(model *go3mf.Model) {
 	model.Metadata = append(model.Metadata, getMetadataElement("Application", "Canvas"))
 }
 
+const sizeOfHeader = 284 // same as go3mf/importer/stl/decoder.go
+
+var ErrModelTooSmall = errors.New("MODEL_TOO_SMALL")
+var ErrAllModelsTooSmall = errors.New("ALL_MODELS_TOO_SMALL")
+
 func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (Model, error) {
 	model := Model{
 		Name:           opts.Name,
@@ -85,6 +91,16 @@ func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (Model, error) {
 	file, err := os.Open(opts.MeshPath)
 	if err != nil {
 		return model, err
+	}
+
+	// ensure the model is not too small to be printable
+	stat, err := file.Stat()
+	if err != nil {
+		return model, err
+	}
+	size := stat.Size()
+	if size < sizeOfHeader {
+		return model, ErrModelTooSmall
 	}
 
 	reader := bufio.NewReader(file)
