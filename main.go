@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -71,19 +72,32 @@ func run() {
 	}
 
 	bundle := ps3mf.NewBundle()
-	if err := bundle.LoadConfig(opts.ConfigPath); err != nil {
+	if err = bundle.LoadConfig(opts.ConfigPath); err != nil {
 		log.Fatalln(err)
 	}
 
+	modelsAdded := 0
 	for _, modelOpts := range opts.Models {
 		model, err := ps3mf.STLtoModel(modelOpts, opts.FilamentIDs)
+		if errors.Is(err, ps3mf.ErrModelTooSmall) {
+			continue
+		}
 		if err != nil {
 			log.Fatalln(err)
 		}
 		bundle.AddModel(&model)
+		modelsAdded++
 	}
 
-	if err := bundle.Save(opts.OutPath); err != nil {
+	if modelsAdded == 0 {
+		_, err := fmt.Fprintf(os.Stderr, "%s", ps3mf.ErrAllModelsTooSmall)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		os.Exit(1)
+	}
+
+	if err = bundle.Save(opts.OutPath); err != nil {
 		log.Fatalln(err)
 	}
 	fmt.Println(bundle.BoundingBox.Serialize())
