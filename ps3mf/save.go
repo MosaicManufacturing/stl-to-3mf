@@ -3,11 +3,12 @@ package ps3mf
 import (
 	"archive/zip"
 	"encoding/xml"
-	"github.com/MosaicManufacturing/go3mf"
 	"io"
 	"io/ioutil"
 	"os"
 	"time"
+
+	"github.com/MosaicManufacturing/go3mf"
 )
 
 const (
@@ -88,7 +89,7 @@ func (b *Bundle) Save(path string) (err error) {
 	writer := zip.NewWriter(zipFile)
 
 	var model ModelXML
-	var idPairs []IdPair
+	var mergedVolumeInfo []MergedVolumesInfo
 
 	for _, file := range reader.File {
 		fileWriter, writerErr := writer.Create(file.Name)
@@ -169,8 +170,13 @@ func (b *Bundle) Save(path string) (err error) {
 				GetMeta("Application", "Canvas"),
 			)
 
-			// combine all meshes into a single mesh
-			idPairs = model.MergeMeshes(b.Matrices)
+			// combine meshes according to their groups
+			result, mergeMeshErr := model.MergeGroupMeshes(b)
+			if mergeMeshErr != nil {
+				err = mergeMeshErr
+				return
+			}
+			mergedVolumeInfo = result
 
 			// write modified content into final zip
 			output, marshalErr := model.Marshal()
@@ -211,7 +217,7 @@ func (b *Bundle) Save(path string) (err error) {
 	}
 
 	// generate and write in Metadata/Slic3r_PE_model.config
-	modelConfig := b.GetModelConfig(&model, idPairs, path)
+	modelConfig := GetModelConfig(&model, mergedVolumeInfo, path)
 	output, marshalErr := modelConfig.Marshal()
 	if marshalErr != nil {
 		err = marshalErr

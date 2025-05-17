@@ -31,7 +31,7 @@ func TestPaintedCube(t *testing.T) {
 		configPath, // ConfigPath
 		"nil",      // FilamentIDs as string
 		"--colors", colorsPath,
-		"Cube",    // Model Name
+		"|cube",   // Model Name
 		transform, // Transforms from transforms.txt
 		"0",       // Extruder
 		"1",       // WipeIntoInfill
@@ -78,7 +78,7 @@ func TestGroupedModels(t *testing.T) {
 		`{"filamentIds":[[0,0]]}`, // Filament IDs JSON
 
 		// single
-		"|cube 3",
+		"|cube3",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|199.000000,206.000000,8.000000,1.000000",
 		"1", // Extruder
 		"0", // WipeIntoInfill
@@ -86,14 +86,14 @@ func TestGroupedModels(t *testing.T) {
 		cubePath,
 
 		// group 2
-		"|Group (2)|cube",
+		"Group (2)|cube",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|157.000000,206.000000,8.000000,1.000000",
 		"1", // Extruder
 		"0", // WipeIntoInfill
 		"0", // WipeIntoModel
 		cubePath,
 
-		"|Group (2)|cube2",
+		"Group (2)|cube2",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|177.000000,206.000000,8.000000,1.000000",
 		"1", // Extruder
 		"0", // WipeIntoInfill
@@ -102,35 +102,35 @@ func TestGroupedModels(t *testing.T) {
 
 		// group 1
 
-		"|Group|Part Studio 1 - Part 1",
+		"Group|Part Studio 1 - Part 1",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|174.000000,167.000000,0.000000,1.000000",
 		"1", // Extruder
 		"0", // WipeIntoInfill
 		"0", // WipeIntoModel
 		part1Path,
 
-		"|Group|Part Studio 1 - Part 2",
+		"Group|Part Studio 1 - Part 2",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|174.000000,167.000000,0.000000,1.000000",
 		"1", // Extruder
 		"0", // WipeIntoInfill
 		"0", // WipeIntoModel
 		part2Path,
 
-		"|Group|Part Studio 1 - Part 3",
+		"Group|Part Studio 1 - Part 3",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|174.000000,167.000000,0.000000,1.000000",
 		"1", // Extruder
 		"0", // WipeIntoInfill
 		"0", // WipeIntoModel
 		part3Path,
 
-		"|Group|Part Studio 1 - Part 4",
+		"Group|Part Studio 1 - Part 4",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|174.000000,167.000000,0.000000,1.000000",
 		"1", // Extruder
 		"0", // WipeIntoInfill
 		"0", // WipeIntoModel
 		part4Path,
 
-		"|Group|Part Studio 1 - Part 5",
+		"Group|Part Studio 1 - Part 5",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|174.000000,167.000000,0.000000,1.000000",
 		"1", // Extruder
 		"0", // WipeIntoInfill

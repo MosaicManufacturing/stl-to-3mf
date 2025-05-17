@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"strings"
 
 	"mosaicmfg.com/stl-to-3mf/util"
 )
@@ -72,51 +73,189 @@ type BuildItem struct {
 	Printable string   `xml:"printable,attr,omitempty"`
 }
 
-func (m *ModelXML) MergeMeshes(matrices []util.Matrix4) []IdPair {
-	idPairs := make([]IdPair, 0, len(m.Resources))
-	idPairs = append(idPairs, IdPair{
-		FirstId: 0,
-		LastId:  len(m.Resources[0].Mesh.Triangles) - 1,
+type MergedVolumesInfo struct {
+	VolumeIdPairs  []MeshTriangleRange
+	VolumeNames    []string
+	Extruders      []string // 1-indexed ints
+	WipeIntoInfill []bool
+	WipeIntoModel  []bool
+	BoundingBox    util.BoundingBox
+}
+
+type Group struct {
+	resources        Resource
+	build            BuildItem
+	volumeIdPairs    []MeshTriangleRange
+	volumeNames      []string
+	currentVertCount int
+	currentTriCount  int
+	Extruders        []string // 1-indexed ints
+	WipeIntoInfill   []bool
+	WipeIntoModel    []bool
+	BoundingBox      util.BoundingBox
+}
+
+// creates and initializes a new Group
+func newGroup(
+	resource Resource,
+	volumeName string,
+	buildItem BuildItem,
+	extruder string,
+	wipeIntoInfill bool,
+	wipeIntoModel bool,
+	boundingBox util.BoundingBox,
+) Group {
+	group := Group{
+		resources:   resource,
+		volumeNames: []string{volumeName},
+		volumeIdPairs: []MeshTriangleRange{
+			{
+				FirstId: 0,
+				LastId:  len(resource.Mesh.Triangles) - 1,
+			},
+		},
+		currentVertCount: len(resource.Mesh.Vertices),
+		currentTriCount:  len(resource.Mesh.Triangles),
+		Extruders:        []string{extruder},
+		WipeIntoInfill:   []bool{wipeIntoInfill},
+		WipeIntoModel:    []bool{wipeIntoModel},
+		BoundingBox:      boundingBox,
+	}
+
+	// set common properties
+	group.resources.Type = "model"
+	group.build = buildItem
+	// use identity matrix since vertices are already transformed
+	group.build.Transform = "1 0 0 0 0 1 0 0 0 0 1 0"
+	return group
+}
+
+// updateGroupWithMesh adds a new mesh to an existing group,
+// updating all indices appropriately
+func updateGroupWithMesh(
+	group *Group,
+	resource Resource,
+	volumeName string,
+	extruder string,
+	wipeIntoInfill bool,
+	wipeIntoModel bool,
+) {
+	// add vertices (with correct offsets for triangles)
+	group.resources.Mesh.Vertices = append(group.resources.Mesh.Vertices, resource.Mesh.Vertices...)
+
+	// add triangles with updated vertex indices
+	for _, tri := range resource.Mesh.Triangles {
+		modifiedTri := Triangle{
+			XMLName:        tri.XMLName,
+			V1:             tri.V1 + group.currentVertCount,
+			V2:             tri.V2 + group.currentVertCount,
+			V3:             tri.V3 + group.currentVertCount,
+			Segmentation:   tri.Segmentation,
+			CustomSupports: tri.CustomSupports,
+		}
+		group.resources.Mesh.Triangles = append(group.resources.Mesh.Triangles, modifiedTri)
+	}
+
+	// update group metadata
+	group.volumeIdPairs = append(group.volumeIdPairs, MeshTriangleRange{
+		FirstId: group.currentTriCount,
+		LastId:  group.currentTriCount + len(resource.Mesh.Triangles) - 1,
 	})
 
-	currentVertCount := len(m.Resources[0].Mesh.Vertices)
-	currentTriCount := len(m.Resources[0].Mesh.Triangles)
+	// Update counters
+	group.currentVertCount += len(resource.Mesh.Vertices)
+	group.currentTriCount += len(resource.Mesh.Triangles)
 
-	// apply transformations to first mesh's vertices
-	for vertIdx, vert := range m.Resources[0].Mesh.Vertices {
-		transformedVert := vert.Transform(matrices[0])
-		m.Resources[0].Mesh.Vertices[vertIdx] = transformedVert
+	// Update metadata arrays
+	group.volumeNames = append(group.volumeNames, volumeName)
+	group.Extruders = append(group.Extruders, extruder)
+	group.WipeIntoInfill = append(group.WipeIntoInfill, wipeIntoInfill)
+	group.WipeIntoModel = append(group.WipeIntoModel, wipeIntoModel)
+}
+
+func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error) {
+	// input validation
+	if len(m.Resources) == 0 {
+		return []MergedVolumesInfo{}, nil
 	}
 
-	for i := 1; i < len(m.Resources); i++ {
-		mesh := m.Resources[i].Mesh
-		// apply transformations to this mesh's vertices
-		for _, vert := range mesh.Vertices {
-			transformedVert := vert.Transform(matrices[i])
-			m.Resources[0].Mesh.Vertices = append(m.Resources[0].Mesh.Vertices, transformedVert)
+	// transform all vertices
+	for i, resource := range m.Resources {
+		for vertIdx, vert := range resource.Mesh.Vertices {
+			transformedVert := vert.Transform(bundle.Matrices[i])
+			resource.Mesh.Vertices[vertIdx] = transformedVert
 		}
-		for _, tri := range mesh.Triangles {
-			tri.V1 += currentVertCount
-			tri.V2 += currentVertCount
-			tri.V3 += currentVertCount
-			m.Resources[0].Mesh.Triangles = append(m.Resources[0].Mesh.Triangles, tri)
+	}
+
+	groups := make(map[string]Group)
+	for i, currResource := range m.Resources {
+		// group them based on path name
+		splitNames := strings.Split(bundle.Paths[i], "|")
+
+		if len(splitNames) != 2 {
+			return nil, fmt.Errorf("invalid path format: %s (expected 'groupName|volumeName')", bundle.Paths[i])
 		}
-		idPairs = append(idPairs, IdPair{
-			FirstId: currentTriCount,
-			LastId:  currentTriCount + len(mesh.Triangles) - 1,
+
+		groupName := splitNames[0]
+		volumeName := splitNames[1]
+
+		if groupName == "" {
+			groups[fmt.Sprintf("%d", i)] = newGroup(
+				currResource,
+				volumeName,
+				m.Build[i],
+				bundle.Extruders[i],
+				bundle.WipeIntoInfill[i],
+				bundle.WipeIntoModel[i],
+				bundle.BoundingBox,
+			)
+		} else {
+			group, groupAlreadyCreated := groups[groupName]
+			if !groupAlreadyCreated {
+				groups[groupName] = newGroup(
+					currResource,
+					volumeName,
+					m.Build[i],
+					bundle.Extruders[i],
+					bundle.WipeIntoInfill[i],
+					bundle.WipeIntoModel[i],
+					bundle.BoundingBox,
+				)
+			} else {
+				// add the new mesh to the existing group
+				updateGroupWithMesh(
+					&group,
+					currResource,
+					volumeName,
+					bundle.Extruders[i],
+					bundle.WipeIntoInfill[i],
+					bundle.WipeIntoModel[i],
+				)
+				// store the modified group back in the map
+				groups[groupName] = group
+			}
+		}
+	}
+
+	m.Resources = m.Resources[:len(groups)]
+	m.Build = m.Build[:len(groups)]
+	index := 0
+	groupVolumeInfo := []MergedVolumesInfo{}
+	for _, group := range groups {
+		m.Resources[index] = group.resources
+		m.Build[index] = group.build
+		groupVolumeInfo = append(groupVolumeInfo, MergedVolumesInfo{
+			VolumeIdPairs:  group.volumeIdPairs,
+			VolumeNames:    group.volumeNames,
+			Extruders:      group.Extruders,
+			WipeIntoInfill: group.WipeIntoInfill,
+			WipeIntoModel:  group.WipeIntoModel,
+			BoundingBox:    group.BoundingBox,
 		})
-		currentVertCount += len(mesh.Vertices)
-		currentTriCount += len(mesh.Triangles)
+		index++
 	}
 
-	m.Resources = m.Resources[:1]
-	m.Resources[0].Type = "model"
-
-	m.Build = m.Build[:1]
-	// use identity matrix since vertices are already transformed
-	m.Build[0].Transform = "1 0 0 0 0 1 0 0 0 0 1 0"
-
-	return idPairs
+	return groupVolumeInfo, nil
 }
 
 func (m *Mesh) AddColors(rle *util.RLE) {
