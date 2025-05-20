@@ -2,14 +2,43 @@ package main
 
 import (
 	"archive/zip"
+	"encoding/xml"
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
+
+	"mosaicmfg.com/stl-to-3mf/ps3mf"
 )
+
+type ContentTypes struct {
+	XMLName xml.Name      `xml:"Types"`
+	Xmlns   string        `xml:"xmlns,attr"`
+	Default []DefaultType `xml:"Default"`
+}
+
+type DefaultType struct {
+	Extension   string `xml:"Extension,attr"`
+	ContentType string `xml:"ContentType,attr"`
+}
+
+func setupDateMock(t testing.TB) func() {
+	originalFunc := ps3mf.CurrentDate
+	ps3mf.CurrentDate = func() string {
+		return "2025-05-17"
+	}
+	return func() {
+		ps3mf.CurrentDate = originalFunc
+	}
+}
 
 // TestPaintedCube tests the conversion of a single STL file to a 3MF file
 func TestPaintedCube(t *testing.T) {
+	// Setup date mock
+	cleanup := setupDateMock(t)
+	defer cleanup()
+
 	// Backup original os.Args
 	originalArgs := os.Args
 	defer func() { os.Args = originalArgs }() // Restore after test
@@ -44,10 +73,14 @@ func TestPaintedCube(t *testing.T) {
 	Run()
 
 	// Verify and extract the output file
-	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), false)
+	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), true)
 }
 
 func TestModelWithCustomSupports(t *testing.T) {
+	// Setup date mock
+	cleanup := setupDateMock(t)
+	defer cleanup()
+
 	// Backup original os.Args
 	originalArgs := os.Args
 	defer func() { os.Args = originalArgs }() // Restore after test
@@ -82,10 +115,14 @@ func TestModelWithCustomSupports(t *testing.T) {
 	Run()
 
 	// Verify and extract the output file
-	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), false)
+	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), true)
 }
 
 func TestGroupedModels(t *testing.T) {
+	// Setup date mock
+	cleanup := setupDateMock(t)
+	defer cleanup()
+
 	// Backup original os.Args
 	originalArgs := os.Args
 	defer func() { os.Args = originalArgs }() // Restore after test
@@ -113,8 +150,6 @@ func TestGroupedModels(t *testing.T) {
 		configPath,                // Config path
 		`{"filamentIds":[[0,0]]}`, // Filament IDs JSON
 
-		// The order below matches your actual execution trace
-
 		// Group 2|cube2
 		"Group (2)|cube2",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|177.000000,206.000000,0.000000,1.000000",
@@ -132,7 +167,7 @@ func TestGroupedModels(t *testing.T) {
 		part4Path,
 
 		// Single cube3
-		"|cube 3", // Note the space in "cube 3" to match your actual args
+		"|cube 3",
 		"1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|199.000000,206.000000,0.000000,1.000000",
 		"1", // Extruder
 		"0", // WipeIntoInfill
@@ -183,7 +218,7 @@ func TestGroupedModels(t *testing.T) {
 	Run()
 
 	// Verify and extract the output file
-	verifyAndExtract(t, outPath, filepath.Join(testDir, "groupedModels_unzip"), false)
+	verifyAndExtract(t, outPath, filepath.Join(testDir, "groupedModels_unzip"), true)
 }
 
 // verifyAndExtract verifies that the output file was created and extracts its contents
@@ -248,5 +283,27 @@ func verifyAndExtract(t *testing.T, outPath, extractDir string, removeOriginal b
 	if removeOriginal {
 		os.Remove(outPath)
 		t.Logf("Removed original 3MF file: %s", outPath)
+	}
+
+	// Sort [Content_Types].xml
+	contentTypesPath := filepath.Join(extractDir, "[Content_Types].xml")
+	if _, err := os.Stat(contentTypesPath); err == nil {
+		data, err := os.ReadFile(contentTypesPath)
+		if err == nil {
+			var contentTypes ContentTypes
+			if err := xml.Unmarshal(data, &contentTypes); err == nil {
+				// Sort
+				sort.Slice(contentTypes.Default, func(i, j int) bool {
+					return contentTypes.Default[i].Extension < contentTypes.Default[j].Extension
+				})
+
+				// Write it back
+				sortedData, err := xml.MarshalIndent(contentTypes, "", "  ")
+				if err == nil {
+					xmlData := append([]byte(xml.Header), sortedData...)
+					os.WriteFile(contentTypesPath, xmlData, 0644)
+				}
+			}
+		}
 	}
 }

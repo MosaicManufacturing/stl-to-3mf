@@ -3,11 +3,12 @@ package ps3mf
 import (
 	"archive/zip"
 	"encoding/xml"
-	"github.com/MosaicManufacturing/go3mf"
 	"io"
 	"io/ioutil"
 	"os"
 	"time"
+
+	"github.com/MosaicManufacturing/go3mf"
 )
 
 const (
@@ -15,6 +16,10 @@ const (
 	mmPaintingVersion          = "1"
 	fdmSupportsPaintingVersion = "1"
 )
+
+var CurrentDate = func() string {
+	return time.Now().Format("2006-01-02") // YYYY-MM-DD
+}
 
 func (b *Bundle) Save(path string) (err error) {
 	// general workflow:
@@ -137,7 +142,6 @@ func (b *Bundle) Save(path string) (err error) {
 			// add missing metadata
 			model.Language = "en-US"
 			model.Slic3rNamespace = slic3rPENamespace
-			currentDate := time.Now().Format("2006-01-02") // YYYY-MM-DD
 			model.Metadata = append(
 				model.Metadata,
 				GetMeta("slic3rpe:Version3mf", version3mf),
@@ -164,8 +168,8 @@ func (b *Bundle) Save(path string) (err error) {
 				GetMeta("Copyright", ""),
 				GetMeta("LicenseTerms", ""),
 				GetMeta("Rating", ""),
-				GetMeta("CreationDate", currentDate),
-				GetMeta("ModificationDate", currentDate),
+				GetMeta("CreationDate", CurrentDate()),
+				GetMeta("ModificationDate", CurrentDate()),
 				GetMeta("Application", "Canvas"),
 			)
 
