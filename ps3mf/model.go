@@ -24,7 +24,7 @@ type ModelOpts struct {
 }
 
 type Model struct {
-	Name           string
+	Path           string
 	Model          *go3mf.Model
 	Transforms     util.Matrix4
 	Colors         *util.RLE
@@ -77,7 +77,7 @@ var ErrAllModelsTooSmall = errors.New("ALL_MODELS_TOO_SMALL")
 
 func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (Model, error) {
 	model := Model{
-		Name:           opts.Name,
+		Path:           opts.Name,
 		Model:          new(go3mf.Model),
 		Transforms:     util.Matrix4{},
 		Colors:         nil,
