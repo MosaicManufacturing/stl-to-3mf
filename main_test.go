@@ -70,7 +70,7 @@ func TestPaintedCube(t *testing.T) {
 	os.Remove(outPath)
 
 	// Call Run function to execute the test
-	Run()
+	run()
 
 	// Verify and extract the output file
 	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), true)
@@ -112,7 +112,7 @@ func TestModelWithCustomSupports(t *testing.T) {
 	os.Remove(outPath)
 
 	// Call Run function to execute the test
-	Run()
+	run()
 
 	// Verify and extract the output file
 	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), true)
@@ -215,7 +215,7 @@ func TestGroupedModels(t *testing.T) {
 		part5Path}
 
 	// Call the Run function
-	Run()
+	run()
 
 	// Verify and extract the output file
 	verifyAndExtract(t, outPath, filepath.Join(testDir, "groupedModels_unzip"), true)
