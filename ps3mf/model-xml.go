@@ -83,7 +83,7 @@ type MergedVolumesInfo struct {
 }
 
 type Group struct {
-	resources        Resource
+	resource         Resource
 	build            BuildItem
 	volumeIdPairs    []MeshTriangleRange
 	volumeNames      []string
@@ -96,7 +96,7 @@ type Group struct {
 }
 
 // creates and initializes a new Group
-func newGroup(
+func makeGroup(
 	resource Resource,
 	volumeName string,
 	buildItem BuildItem,
@@ -106,7 +106,7 @@ func newGroup(
 	boundingBox util.BoundingBox,
 ) Group {
 	group := Group{
-		resources:   resource,
+		resource:    resource,
 		volumeNames: []string{volumeName},
 		volumeIdPairs: []MeshTriangleRange{
 			{
@@ -123,7 +123,7 @@ func newGroup(
 	}
 
 	// set common properties
-	group.resources.Type = "model"
+	group.resource.Type = "model"
 	group.build = buildItem
 	// use identity matrix since vertices are already transformed
 	group.build.Transform = "1 0 0 0 0 1 0 0 0 0 1 0"
@@ -141,7 +141,7 @@ func updateGroupWithMesh(
 	wipeIntoModel bool,
 ) {
 	// add vertices (with correct offsets for triangles)
-	group.resources.Mesh.Vertices = append(group.resources.Mesh.Vertices, resource.Mesh.Vertices...)
+	group.resource.Mesh.Vertices = append(group.resource.Mesh.Vertices, resource.Mesh.Vertices...)
 
 	// add triangles with updated vertex indices
 	for _, tri := range resource.Mesh.Triangles {
@@ -153,7 +153,7 @@ func updateGroupWithMesh(
 			Segmentation:   tri.Segmentation,
 			CustomSupports: tri.CustomSupports,
 		}
-		group.resources.Mesh.Triangles = append(group.resources.Mesh.Triangles, modifiedTri)
+		group.resource.Mesh.Triangles = append(group.resource.Mesh.Triangles, modifiedTri)
 	}
 
 	// update group metadata
@@ -200,7 +200,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 		volumeName := splitNames[1]
 
 		if groupName == "" {
-			groups[fmt.Sprintf("%d", i)] = newGroup(
+			groups[fmt.Sprintf("%d", i)] = makeGroup(
 				currResource,
 				volumeName,
 				m.Build[i],
@@ -212,7 +212,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 		} else {
 			group, groupAlreadyCreated := groups[groupName]
 			if !groupAlreadyCreated {
-				groups[groupName] = newGroup(
+				groups[groupName] = makeGroup(
 					currResource,
 					volumeName,
 					m.Build[i],
@@ -242,7 +242,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 	index := 0
 	groupVolumeInfo := []MergedVolumesInfo{}
 	for _, group := range groups {
-		m.Resources[index] = group.resources
+		m.Resources[index] = group.resource
 		m.Build[index] = group.build
 		groupVolumeInfo = append(groupVolumeInfo, MergedVolumesInfo{
 			VolumeIdPairs:  group.volumeIdPairs,
