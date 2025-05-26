@@ -25,9 +25,7 @@ type DefaultType struct {
 
 func setupDateMock(t testing.TB) func() {
 	originalFunc := ps3mf.CurrentDate
-	ps3mf.CurrentDate = func() string {
-		return "2025-05-17"
-	}
+	ps3mf.CurrentDate = "2025-05-17"
 	return func() {
 		ps3mf.CurrentDate = originalFunc
 	}
