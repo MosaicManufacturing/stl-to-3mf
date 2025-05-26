@@ -83,16 +83,22 @@ type MergedVolumesInfo struct {
 }
 
 type Group struct {
-	resource         Resource
-	build            BuildItem
-	volumeIdPairs    []MeshTriangleRange
-	volumeNames      []string
-	currentVertCount int
-	currentTriCount  int
-	Extruders        []string // 1-indexed ints
-	WipeIntoInfill   []bool
-	WipeIntoModel    []bool
-	BoundingBox      util.BoundingBox
+	resource       Resource
+	build          BuildItem
+	volumeIdPairs  []MeshTriangleRange
+	volumeNames    []string
+	Extruders      []string // 1-indexed ints
+	WipeIntoInfill []bool
+	WipeIntoModel  []bool
+	BoundingBox    util.BoundingBox
+}
+
+func (group *Group) getCurrentVertCount() int {
+	return len(group.resource.Mesh.Vertices)
+}
+
+func (group *Group) getCurrentTriCount() int {
+	return len(group.resource.Mesh.Triangles)
 }
 
 // creates and initializes a new Group
@@ -114,12 +120,10 @@ func makeGroup(
 				LastId:  len(resource.Mesh.Triangles) - 1,
 			},
 		},
-		currentVertCount: len(resource.Mesh.Vertices),
-		currentTriCount:  len(resource.Mesh.Triangles),
-		Extruders:        []string{extruder},
-		WipeIntoInfill:   []bool{wipeIntoInfill},
-		WipeIntoModel:    []bool{wipeIntoModel},
-		BoundingBox:      boundingBox,
+		Extruders:      []string{extruder},
+		WipeIntoInfill: []bool{wipeIntoInfill},
+		WipeIntoModel:  []bool{wipeIntoModel},
+		BoundingBox:    boundingBox,
 	}
 
 	// set common properties
@@ -140,6 +144,9 @@ func updateGroupWithMesh(
 	wipeIntoInfill bool,
 	wipeIntoModel bool,
 ) {
+	currentVertCount := group.getCurrentVertCount()
+	currentTriCount := group.getCurrentTriCount()
+
 	// add vertices (with correct offsets for triangles)
 	group.resource.Mesh.Vertices = append(group.resource.Mesh.Vertices, resource.Mesh.Vertices...)
 
@@ -147,9 +154,9 @@ func updateGroupWithMesh(
 	for _, tri := range resource.Mesh.Triangles {
 		modifiedTri := Triangle{
 			XMLName:        tri.XMLName,
-			V1:             tri.V1 + group.currentVertCount,
-			V2:             tri.V2 + group.currentVertCount,
-			V3:             tri.V3 + group.currentVertCount,
+			V1:             tri.V1 + currentVertCount,
+			V2:             tri.V2 + currentVertCount,
+			V3:             tri.V3 + currentVertCount,
 			Segmentation:   tri.Segmentation,
 			CustomSupports: tri.CustomSupports,
 		}
@@ -158,13 +165,9 @@ func updateGroupWithMesh(
 
 	// update group metadata
 	group.volumeIdPairs = append(group.volumeIdPairs, MeshTriangleRange{
-		FirstId: group.currentTriCount,
-		LastId:  group.currentTriCount + len(resource.Mesh.Triangles) - 1,
+		FirstId: currentTriCount,
+		LastId:  currentTriCount + len(resource.Mesh.Triangles) - 1,
 	})
-
-	// Update counters
-	group.currentVertCount += len(resource.Mesh.Vertices)
-	group.currentTriCount += len(resource.Mesh.Triangles)
 
 	// Update metadata arrays
 	group.volumeNames = append(group.volumeNames, volumeName)
