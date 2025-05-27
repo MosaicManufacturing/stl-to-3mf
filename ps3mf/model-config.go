@@ -85,12 +85,13 @@ func GetModelConfig(m *ModelXML, groupVolumeInfo []MergedVolumesInfo, outpath st
 		extruders := groupVolumeInfo[idx].Extruders
 		wipeIntoInfill := groupVolumeInfo[idx].WipeIntoInfill
 		wipeIntoModel := groupVolumeInfo[idx].WipeIntoModel
+		objectName := groupVolumeInfo[idx].ObjectName
 
 		objectConfig := ModelConfigObject{
 			Id:             id,
 			InstancesCount: "1",
 			Metadata: []ModelConfigMeta{
-				GetModelConfigMeta("object", "name", "model"),
+				GetModelConfigMeta("object", "name", objectName),
 				GetModelConfigMeta("object", "extruder", "0"), // "default" (look at volumes instead)
 				GetModelConfigMeta("object", "wipe_into_infill", boolToIntString(wipeIntoInfill[0])),
 				GetModelConfigMeta("object", "wipe_into_objects", boolToIntString(wipeIntoModel[0])),

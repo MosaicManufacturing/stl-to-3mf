@@ -74,6 +74,7 @@ type BuildItem struct {
 }
 
 type MergedVolumesInfo struct {
+	ObjectName     string
 	VolumeIdPairs  []MeshTriangleRange
 	VolumeNames    []string
 	Extruders      []string // 1-indexed ints
@@ -83,6 +84,7 @@ type MergedVolumesInfo struct {
 }
 
 type Group struct {
+	name           string
 	resource       Resource
 	build          BuildItem
 	volumeIdPairs  []MeshTriangleRange
@@ -103,6 +105,7 @@ func (group *Group) getCurrentTriCount() int {
 
 // creates and initializes a new Group
 func makeGroup(
+	name string,
 	resource Resource,
 	volumeName string,
 	buildItem BuildItem,
@@ -112,6 +115,7 @@ func makeGroup(
 	boundingBox util.BoundingBox,
 ) Group {
 	group := Group{
+		name:        name,
 		resource:    resource,
 		volumeNames: []string{volumeName},
 		volumeIdPairs: []MeshTriangleRange{
@@ -204,6 +208,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 
 		if groupName == "" {
 			groups[fmt.Sprintf("%d", i)] = makeGroup(
+				volumeName,
 				currResource,
 				volumeName,
 				m.Build[i],
@@ -216,6 +221,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 			group, groupAlreadyCreated := groups[groupName]
 			if !groupAlreadyCreated {
 				groups[groupName] = makeGroup(
+					groupName,
 					currResource,
 					volumeName,
 					m.Build[i],
@@ -248,6 +254,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 		m.Resources[index] = group.resource
 		m.Build[index] = group.build
 		groupVolumeInfo = append(groupVolumeInfo, MergedVolumesInfo{
+			ObjectName:     group.name,
 			VolumeIdPairs:  group.volumeIdPairs,
 			VolumeNames:    group.volumeNames,
 			Extruders:      group.Extruders,
