@@ -28,7 +28,7 @@ import (
 //     /thumbnail.png
 
 type Bundle struct {
-	Names          []string
+	Paths          []string
 	Model          *go3mf.Model
 	Matrices       []util.Matrix4
 	Colors         []*util.RLE // nil for objects with no data
@@ -43,7 +43,7 @@ type Bundle struct {
 
 func NewBundle() Bundle {
 	return Bundle{
-		Names:          make([]string, 0),
+		Paths:          make([]string, 0),
 		Model:          new(go3mf.Model),
 		Matrices:       make([]util.Matrix4, 0),
 		Colors:         make([]*util.RLE, 0),
@@ -96,7 +96,7 @@ func (b *Bundle) AddModel(model *Model) {
 
 	b.Model.Resources.Objects = append(b.Model.Resources.Objects, model.Model.Resources.Objects[0])
 	b.Model.Build.Items = append(b.Model.Build.Items, model.Model.Build.Items[0])
-	b.Names = append(b.Names, model.Name)
+	b.Paths = append(b.Paths, model.Path)
 	b.Matrices = append(b.Matrices, model.Transforms)
 	b.Colors = append(b.Colors, model.Colors)
 	b.Supports = append(b.Supports, model.Supports)

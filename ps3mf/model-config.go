@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-type IdPair struct {
+type MeshTriangleRange struct {
 	FirstId int
 	LastId  int
 }
@@ -74,30 +74,38 @@ func boolToIntString(b bool) string {
 	return "0"
 }
 
-func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair, outpath string) ModelConfig {
+func GetModelConfig(m *ModelXML, groupVolumeInfo []MergedVolumesInfo, outpath string) ModelConfig {
 	config := ModelConfig{
-		Objects: make([]ModelConfigObject, 0, len(b.Model.Resources.Objects)),
+		Objects: make([]ModelConfigObject, 0, len(groupVolumeInfo)),
 	}
 	for idx := range m.Resources {
 		id := m.Resources[idx].Id
+		idPairs := groupVolumeInfo[idx].VolumeIdPairs
+		volumeNames := groupVolumeInfo[idx].VolumeNames
+		extruders := groupVolumeInfo[idx].Extruders
+		wipeIntoInfill := groupVolumeInfo[idx].WipeIntoInfill
+		wipeIntoModel := groupVolumeInfo[idx].WipeIntoModel
+		objectName := groupVolumeInfo[idx].ObjectName
+
 		objectConfig := ModelConfigObject{
 			Id:             id,
 			InstancesCount: "1",
 			Metadata: []ModelConfigMeta{
-				GetModelConfigMeta("object", "name", "model"),
+				GetModelConfigMeta("object", "name", objectName),
 				GetModelConfigMeta("object", "extruder", "0"), // "default" (look at volumes instead)
-				GetModelConfigMeta("object", "wipe_into_infill", boolToIntString(b.WipeIntoInfill[idx])),
-				GetModelConfigMeta("object", "wipe_into_objects", boolToIntString(b.WipeIntoModel[idx])),
+				GetModelConfigMeta("object", "wipe_into_infill", boolToIntString(wipeIntoInfill[0])),
+				GetModelConfigMeta("object", "wipe_into_objects", boolToIntString(wipeIntoModel[0])),
 			},
 			Volume: make([]ModelConfigVolume, len(idPairs)),
 		}
+
 		for volumeIndex, idPair := range idPairs {
 			objectConfig.Volume[volumeIndex] = ModelConfigVolume{
 				XMLName: xml.Name{},
 				FirstId: strconv.Itoa(idPair.FirstId),
 				LastId:  strconv.Itoa(idPair.LastId),
 				Metadata: []ModelConfigMeta{
-					GetModelConfigMeta("volume", "name", b.Names[volumeIndex]),
+					GetModelConfigMeta("volume", "name", volumeNames[volumeIndex]),
 					GetModelConfigMeta("volume", "volume_type", "ModelPart"),
 					// use identity matrix since vertices are already transformed
 					GetModelConfigMeta("volume", "matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
@@ -107,7 +115,7 @@ func (b *Bundle) GetModelConfig(m *ModelXML, idPairs []IdPair, outpath string) M
 					GetModelConfigMeta("volume", "source_offset_x", "0"),
 					GetModelConfigMeta("volume", "source_offset_y", "0"),
 					GetModelConfigMeta("volume", "source_offset_z", "0"),
-					GetModelConfigMeta("volume", "extruder", b.Extruders[volumeIndex]),
+					GetModelConfigMeta("volume", "extruder", extruders[volumeIndex]),
 				},
 				Mesh: GetModelConfigMesh(),
 			}

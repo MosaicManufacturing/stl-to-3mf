@@ -48,7 +48,7 @@ func getOpts() (Opts, error) {
 			modelOpts.SupportsPath = argv[i]
 			i++
 		}
-		modelOpts.Name = argv[i]
+		modelOpts.Path = argv[i]
 		i++
 		modelOpts.Transforms = argv[i]
 		i++
