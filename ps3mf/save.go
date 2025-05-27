@@ -17,9 +17,11 @@ const (
 	fdmSupportsPaintingVersion = "1"
 )
 
-var CurrentDate = func() string {
+func getCurrentDate() string {
 	return time.Now().Format("2006-01-02") // YYYY-MM-DD
 }
+
+var CurrentDate = getCurrentDate()
 
 func (b *Bundle) Save(path string) (err error) {
 	// general workflow:
@@ -168,8 +170,8 @@ func (b *Bundle) Save(path string) (err error) {
 				GetMeta("Copyright", ""),
 				GetMeta("LicenseTerms", ""),
 				GetMeta("Rating", ""),
-				GetMeta("CreationDate", CurrentDate()),
-				GetMeta("ModificationDate", CurrentDate()),
+				GetMeta("CreationDate", CurrentDate),
+				GetMeta("ModificationDate", CurrentDate),
 				GetMeta("Application", "Canvas"),
 			)
 

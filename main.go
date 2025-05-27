@@ -65,7 +65,7 @@ func getOpts() (Opts, error) {
 	return opts, nil
 }
 
-func Run() {
+func run() {
 	opts, err := getOpts()
 	if err != nil {
 		log.Fatalln(err)
@@ -104,5 +104,5 @@ func Run() {
 }
 
 func main() {
-	Run()
+	run()
 }

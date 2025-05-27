@@ -25,9 +25,7 @@ type DefaultType struct {
 
 func setupDateMock(t testing.TB) func() {
 	originalFunc := ps3mf.CurrentDate
-	ps3mf.CurrentDate = func() string {
-		return "2025-05-17"
-	}
+	ps3mf.CurrentDate = "2025-05-17"
 	return func() {
 		ps3mf.CurrentDate = originalFunc
 	}
@@ -70,7 +68,7 @@ func TestPaintedCube(t *testing.T) {
 	os.Remove(outPath)
 
 	// Call Run function to execute the test
-	Run()
+	run()
 
 	// Verify and extract the output file
 	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), true)
@@ -112,7 +110,7 @@ func TestModelWithCustomSupports(t *testing.T) {
 	os.Remove(outPath)
 
 	// Call Run function to execute the test
-	Run()
+	run()
 
 	// Verify and extract the output file
 	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), true)
@@ -215,7 +213,7 @@ func TestGroupedModels(t *testing.T) {
 		part5Path}
 
 	// Call the Run function
-	Run()
+	run()
 
 	// Verify and extract the output file
 	verifyAndExtract(t, outPath, filepath.Join(testDir, "groupedModels_unzip"), true)
