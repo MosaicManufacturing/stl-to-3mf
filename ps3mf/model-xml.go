@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"sort"
 	"strings"
 
 	"mosaicmfg.com/stl-to-3mf/util"
@@ -250,7 +251,18 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 	m.Build = m.Build[:len(groups)]
 	index := 0
 	groupVolumeInfo := []MergedVolumesInfo{}
-	for _, group := range groups {
+
+	groupArray := []Group{}
+	for _, value := range groups {
+		groupArray = append(groupArray, value)
+	}
+
+	// sort the groups by name to ensure deterministic output
+	sort.Slice(groupArray, func(i, j int) bool {
+		return groupArray[i].name < groupArray[j].name
+	})
+
+	for _, group := range groupArray {
 		m.Resources[index] = group.resource
 		m.Build[index] = group.build
 		groupVolumeInfo = append(groupVolumeInfo, MergedVolumesInfo{
