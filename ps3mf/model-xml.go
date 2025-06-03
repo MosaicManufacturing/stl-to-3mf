@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"sort"
 	"strings"
 
 	"mosaicmfg.com/stl-to-3mf/util"
@@ -196,6 +195,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 	}
 
 	groups := make(map[string]Group)
+	groupNameOrderAdded := []string{}
 	for i, currResource := range m.Resources {
 		// group them based on path name
 		splitNames := strings.Split(bundle.Paths[i], "|")
@@ -208,7 +208,8 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 		volumeName := splitNames[1]
 
 		if groupName == "" {
-			groups[fmt.Sprintf("%d", i)] = makeGroup(
+			modelGroupIndex := fmt.Sprintf("%d", i)
+			groups[modelGroupIndex] = makeGroup(
 				volumeName,
 				currResource,
 				volumeName,
@@ -218,6 +219,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 				bundle.WipeIntoModel[i],
 				bundle.BoundingBox,
 			)
+			groupNameOrderAdded = append(groupNameOrderAdded, modelGroupIndex)
 		} else {
 			group, groupAlreadyCreated := groups[groupName]
 			if !groupAlreadyCreated {
@@ -231,6 +233,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 					bundle.WipeIntoModel[i],
 					bundle.BoundingBox,
 				)
+				groupNameOrderAdded = append(groupNameOrderAdded, groupName)
 			} else {
 				// add the new mesh to the existing group
 				updateGroupWithMesh(
@@ -252,17 +255,8 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 	index := 0
 	groupVolumeInfo := []MergedVolumesInfo{}
 
-	groupArray := []Group{}
-	for _, value := range groups {
-		groupArray = append(groupArray, value)
-	}
-
-	// sort the groups by name to ensure deterministic output
-	sort.Slice(groupArray, func(i, j int) bool {
-		return groupArray[i].name < groupArray[j].name
-	})
-
-	for _, group := range groupArray {
+	for _, groupName := range groupNameOrderAdded {
+		group := groups[groupName]
 		m.Resources[index] = group.resource
 		m.Build[index] = group.build
 		groupVolumeInfo = append(groupVolumeInfo, MergedVolumesInfo{

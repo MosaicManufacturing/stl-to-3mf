@@ -14,13 +14,24 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/license-check
 
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    # if source branch is main, there will already be jobs from
+    # the "push" workflow associated with this PR, so nothing needs to be re-run
+    if: github.head_ref != 'main'
+    needs: ['licensebot']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test
+
   build:
     name: Compile
     runs-on: ubuntu-latest
     # if source branch is main, there will already be jobs from
     # the "push" workflow associated with this PR, so nothing needs to be re-run
     if: github.head_ref != 'main'
-    needs: ['licensebot']
+    needs: ['test']
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/build
