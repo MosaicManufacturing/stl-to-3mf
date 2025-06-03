@@ -1,8 +1,5 @@
 name: Unit tests   
 description: Runs Unit tests and Snapshots
-defaults:
-  run:
-    shell: bash
 runs:
   using: composite
   steps:
@@ -12,5 +9,7 @@ runs:
           go-version: '1.22'
       - name: Download dependencies
         run: go mod download
+        shell: bash
       - name: Run tests with snapshots
         run: go test -v
+        shell: bash
