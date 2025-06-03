@@ -1,10 +1,8 @@
 name: Unit tests   
 description: Runs Unit tests and Snapshots
-inputs:
-  deploy-env:
-    description: DEPLOY_ENV
-    type: string
-    required: true
+defaults:
+  run:
+    shell: bash
 runs:
   using: composite
   steps:
