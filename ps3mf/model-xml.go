@@ -252,10 +252,9 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 
 	m.Resources = m.Resources[:len(groups)]
 	m.Build = m.Build[:len(groups)]
-	index := 0
 	groupVolumeInfo := []MergedVolumesInfo{}
 
-	for _, groupName := range groupNameOrderAdded {
+	for index, groupName := range groupNameOrderAdded {
 		group := groups[groupName]
 		m.Resources[index] = group.resource
 		m.Build[index] = group.build
@@ -268,7 +267,6 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 			WipeIntoModel:  group.WipeIntoModel,
 			BoundingBox:    group.BoundingBox,
 		})
-		index++
 	}
 
 	return groupVolumeInfo, nil
