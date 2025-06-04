@@ -1,8 +1,6 @@
 module mosaicmfg.com/stl-to-3mf
 
-go 1.22
-
-toolchain go1.23.1
+go 1.23.1
 
 require github.com/MosaicManufacturing/go3mf v0.1.0
 
