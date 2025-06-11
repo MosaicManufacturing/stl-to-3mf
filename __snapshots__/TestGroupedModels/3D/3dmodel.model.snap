@@ -1,3 +1,5 @@
+
+[TestGroupedModels - 1]
 <?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:slic3rpe="http://schemas.slic3r.org/3mf/2017/06">
  <metadata name="slic3rpe:Version3mf">1</metadata>
@@ -3970,3 +3972,5 @@
   <item objectid="3" transform="1 0 0 0 0 1 0 0 0 0 1 0" printable="1"/>
  </build>
 </model>
+
+---

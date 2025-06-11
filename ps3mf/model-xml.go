@@ -195,6 +195,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 	}
 
 	groups := make(map[string]Group)
+	groupNameOrderAdded := []string{}
 	for i, currResource := range m.Resources {
 		// group them based on path name
 		splitNames := strings.Split(bundle.Paths[i], "|")
@@ -207,7 +208,8 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 		volumeName := splitNames[1]
 
 		if groupName == "" {
-			groups[fmt.Sprintf("%d", i)] = makeGroup(
+			modelGroupIndex := fmt.Sprintf("%d", i)
+			groups[modelGroupIndex] = makeGroup(
 				volumeName,
 				currResource,
 				volumeName,
@@ -217,6 +219,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 				bundle.WipeIntoModel[i],
 				bundle.BoundingBox,
 			)
+			groupNameOrderAdded = append(groupNameOrderAdded, modelGroupIndex)
 		} else {
 			group, groupAlreadyCreated := groups[groupName]
 			if !groupAlreadyCreated {
@@ -230,6 +233,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 					bundle.WipeIntoModel[i],
 					bundle.BoundingBox,
 				)
+				groupNameOrderAdded = append(groupNameOrderAdded, groupName)
 			} else {
 				// add the new mesh to the existing group
 				updateGroupWithMesh(
@@ -248,9 +252,10 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 
 	m.Resources = m.Resources[:len(groups)]
 	m.Build = m.Build[:len(groups)]
-	index := 0
 	groupVolumeInfo := []MergedVolumesInfo{}
-	for _, group := range groups {
+
+	for index, groupName := range groupNameOrderAdded {
+		group := groups[groupName]
 		m.Resources[index] = group.resource
 		m.Build[index] = group.build
 		groupVolumeInfo = append(groupVolumeInfo, MergedVolumesInfo{
@@ -262,7 +267,6 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 			WipeIntoModel:  group.WipeIntoModel,
 			BoundingBox:    group.BoundingBox,
 		})
-		index++
 	}
 
 	return groupVolumeInfo, nil

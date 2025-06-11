@@ -1,0 +1,51 @@
+
+[TestPaintedCube - 1]
+<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:slic3rpe="http://schemas.slic3r.org/3mf/2017/06">
+ <metadata name="slic3rpe:Version3mf">1</metadata>
+ <metadata name="slic3rpe:MmPaintingVersion">1</metadata>
+ <metadata name="Title">Project</metadata>
+ <metadata name="Designer"></metadata>
+ <metadata name="Description"></metadata>
+ <metadata name="Copyright"></metadata>
+ <metadata name="LicenseTerms"></metadata>
+ <metadata name="Rating"></metadata>
+ <metadata name="CreationDate">2025-05-17</metadata>
+ <metadata name="ModificationDate">2025-05-17</metadata>
+ <metadata name="Application">Canvas</metadata>
+ <resources>
+  <object id="1" type="model">
+   <mesh>
+    <vertices>
+     <vertex x="169.5" y="185.5" z="8"/>
+     <vertex x="169.5" y="169.5" z="8"/>
+     <vertex x="169.5" y="185.5" z="24"/>
+     <vertex x="169.5" y="169.5" z="24"/>
+     <vertex x="185.5" y="185.5" z="8"/>
+     <vertex x="185.5" y="185.5" z="24"/>
+     <vertex x="185.5" y="169.5" z="8"/>
+     <vertex x="185.5" y="169.5" z="24"/>
+    </vertices>
+    <triangles>
+     <triangle v1="0" v2="1" v3="2"/>
+     <triangle v1="2" v2="1" v3="3"/>
+     <triangle v1="4" v2="0" v3="5"/>
+     <triangle v1="5" v2="0" v3="2"/>
+     <triangle v1="6" v2="4" v3="7"/>
+     <triangle v1="7" v2="4" v3="5"/>
+     <triangle v1="1" v2="6" v3="3"/>
+     <triangle v1="3" v2="6" v3="7"/>
+     <triangle v1="3" v2="7" v3="2" slic3rpe:mmu_segmentation="8"/>
+     <triangle v1="2" v2="7" v3="5" slic3rpe:mmu_segmentation="8"/>
+     <triangle v1="6" v2="1" v3="4"/>
+     <triangle v1="4" v2="1" v3="0"/>
+    </triangles>
+   </mesh>
+  </object>
+ </resources>
+ <build>
+  <item objectid="1" transform="1 0 0 0 0 1 0 0 0 0 1 0" printable="1"/>
+ </build>
+</model>
+
+---

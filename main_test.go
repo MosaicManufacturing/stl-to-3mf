@@ -9,6 +9,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/gkampitakis/go-snaps/snaps"
 	"mosaicmfg.com/stl-to-3mf/ps3mf"
 )
 
@@ -70,8 +71,8 @@ func TestPaintedCube(t *testing.T) {
 	// Call Run function to execute the test
 	run()
 
-	// Verify and extract the output file
-	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), true)
+	// Snapshot the generated 3MF contents
+	snapshotZipContents(t, outPath)
 }
 
 func TestModelWithCustomSupports(t *testing.T) {
@@ -112,8 +113,8 @@ func TestModelWithCustomSupports(t *testing.T) {
 	// Call Run function to execute the test
 	run()
 
-	// Verify and extract the output file
-	verifyAndExtract(t, outPath, filepath.Join(testDir, "coloredCube_unzip"), true)
+	// Snapshot the generated 3MF contents
+	snapshotZipContents(t, outPath)
 }
 
 func TestGroupedModels(t *testing.T) {
@@ -215,93 +216,71 @@ func TestGroupedModels(t *testing.T) {
 	// Call the Run function
 	run()
 
-	// Verify and extract the output file
-	verifyAndExtract(t, outPath, filepath.Join(testDir, "groupedModels_unzip"), true)
+	// Snapshot the generated 3MF contents
+	snapshotZipContents(t, outPath)
 }
 
-// verifyAndExtract verifies that the output file was created and extracts its contents
-// if removeOriginal is true, the original 3MF file will be removed after extraction
-func verifyAndExtract(t *testing.T, outPath, extractDir string, removeOriginal bool) {
+// Read ZIP file and creates individual snapshots for each file
+func snapshotZipContents(t *testing.T, zipPath string) {
 	// Verify the output file was created
-	if _, err := os.Stat(outPath); os.IsNotExist(err) {
-		t.Errorf("Output file was not created at %s", outPath)
+	if _, err := os.Stat(zipPath); os.IsNotExist(err) {
+		t.Errorf("Output file was not created at %s", zipPath)
 		return
 	}
 
-	t.Logf("Successfully created output file at %s", outPath)
-
-	// Unzip the output file
-	reader, err := zip.OpenReader(outPath)
+	// Open the ZIP file
+	reader, err := zip.OpenReader(zipPath)
 	if err != nil {
 		t.Fatalf("Failed to open 3MF file: %v", err)
 	}
 	defer reader.Close()
 
-	// Create extract directory if it doesn't exist
-	os.MkdirAll(extractDir, 0755)
-
-	// Extract all files
+	// Create individual snapshots
 	for _, file := range reader.File {
-		filePath := filepath.Join(extractDir, file.Name)
-
-		// Create directory for file if needed
-		os.MkdirAll(filepath.Dir(filePath), 0755)
-
-		// Skip directories
 		if file.FileInfo().IsDir() {
 			continue
 		}
 
-		// Extract file
 		srcFile, err := file.Open()
 		if err != nil {
 			t.Logf("Error opening %s: %v", file.Name, err)
 			continue
 		}
 
-		dstFile, err := os.Create(filePath)
+		content, err := io.ReadAll(srcFile)
+		srcFile.Close()
 		if err != nil {
-			srcFile.Close()
-			t.Logf("Error creating %s: %v", filePath, err)
+			t.Logf("Error reading %s: %v", file.Name, err)
 			continue
 		}
 
-		_, err = io.Copy(dstFile, srcFile)
-		srcFile.Close()
-		dstFile.Close()
+		// For XML files, sort them to ensure deterministic output
+		if file.Name == "[Content_Types].xml" {
+			content = sortContentTypesXML(content)
+		}
 
-		if err != nil {
-			t.Logf("Error extracting %s: %v", file.Name, err)
+		// Create a snapshot organized by test name and file path
+		snapshotPath := filepath.Join(t.Name(), file.Name)
+		snaps.WithConfig(snaps.Filename(snapshotPath)).MatchSnapshot(t, string(content))
+	}
+
+	// Clean up the output file
+	os.Remove(zipPath)
+}
+
+// Sorts XML content to ensure deterministic output
+func sortContentTypesXML(content []byte) []byte {
+	var contentTypes ContentTypes
+	if err := xml.Unmarshal(content, &contentTypes); err == nil {
+		// Sort Default elements
+		sort.Slice(contentTypes.Default, func(i, j int) bool {
+			return contentTypes.Default[i].Extension < contentTypes.Default[j].Extension
+		})
+
+		// Marshal back to XML
+		if sortedData, err := xml.MarshalIndent(contentTypes, "", "    "); err == nil {
+			return append([]byte(xml.Header), sortedData...)
 		}
 	}
-
-	t.Logf("Extracted 3MF to %s", extractDir)
-
-	// Optionally remove the original 3MF file
-	if removeOriginal {
-		os.Remove(outPath)
-		t.Logf("Removed original 3MF file: %s", outPath)
-	}
-
-	// Sort [Content_Types].xml
-	contentTypesPath := filepath.Join(extractDir, "[Content_Types].xml")
-	if _, err := os.Stat(contentTypesPath); err == nil {
-		data, err := os.ReadFile(contentTypesPath)
-		if err == nil {
-			var contentTypes ContentTypes
-			if err := xml.Unmarshal(data, &contentTypes); err == nil {
-				// Sort
-				sort.Slice(contentTypes.Default, func(i, j int) bool {
-					return contentTypes.Default[i].Extension < contentTypes.Default[j].Extension
-				})
-
-				// Write it back
-				sortedData, err := xml.MarshalIndent(contentTypes, "", "  ")
-				if err == nil {
-					xmlData := append([]byte(xml.Header), sortedData...)
-					os.WriteFile(contentTypesPath, xmlData, 0644)
-				}
-			}
-		}
-	}
+	return content
 }
