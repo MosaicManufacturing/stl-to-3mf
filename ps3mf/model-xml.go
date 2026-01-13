@@ -80,6 +80,7 @@ type MergedVolumesInfo struct {
 	Extruders      []string // 1-indexed ints
 	WipeIntoInfill []bool
 	WipeIntoModel  []bool
+	InfillDensity  []int
 	BoundingBox    util.BoundingBox
 }
 
@@ -92,6 +93,7 @@ type Group struct {
 	Extruders      []string // 1-indexed ints
 	WipeIntoInfill []bool
 	WipeIntoModel  []bool
+	InfillDensity  []int
 	BoundingBox    util.BoundingBox
 }
 
@@ -112,6 +114,7 @@ func makeGroup(
 	extruder string,
 	wipeIntoInfill bool,
 	wipeIntoModel bool,
+	infillDensity int,
 	boundingBox util.BoundingBox,
 ) Group {
 	group := Group{
@@ -127,6 +130,7 @@ func makeGroup(
 		Extruders:      []string{extruder},
 		WipeIntoInfill: []bool{wipeIntoInfill},
 		WipeIntoModel:  []bool{wipeIntoModel},
+		InfillDensity:  []int{infillDensity},
 		BoundingBox:    boundingBox,
 	}
 
@@ -147,6 +151,7 @@ func updateGroupWithMesh(
 	extruder string,
 	wipeIntoInfill bool,
 	wipeIntoModel bool,
+	infillDensity int,
 ) {
 	currentVertCount := group.getCurrentVertCount()
 	currentTriCount := group.getCurrentTriCount()
@@ -178,6 +183,7 @@ func updateGroupWithMesh(
 	group.Extruders = append(group.Extruders, extruder)
 	group.WipeIntoInfill = append(group.WipeIntoInfill, wipeIntoInfill)
 	group.WipeIntoModel = append(group.WipeIntoModel, wipeIntoModel)
+	group.InfillDensity = append(group.InfillDensity, infillDensity)
 }
 
 func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error) {
@@ -217,6 +223,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 				bundle.Extruders[i],
 				bundle.WipeIntoInfill[i],
 				bundle.WipeIntoModel[i],
+				bundle.InfillDensity[i],
 				bundle.BoundingBox,
 			)
 			groupNameOrderAdded = append(groupNameOrderAdded, modelGroupIndex)
@@ -231,6 +238,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 					bundle.Extruders[i],
 					bundle.WipeIntoInfill[i],
 					bundle.WipeIntoModel[i],
+					bundle.InfillDensity[i],
 					bundle.BoundingBox,
 				)
 				groupNameOrderAdded = append(groupNameOrderAdded, groupName)
@@ -243,6 +251,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 					bundle.Extruders[i],
 					bundle.WipeIntoInfill[i],
 					bundle.WipeIntoModel[i],
+					bundle.InfillDensity[i],
 				)
 				// store the modified group back in the map
 				groups[groupName] = group
@@ -265,6 +274,7 @@ func (m *ModelXML) MergeGroupMeshes(bundle *Bundle) ([]MergedVolumesInfo, error)
 			Extruders:      group.Extruders,
 			WipeIntoInfill: group.WipeIntoInfill,
 			WipeIntoModel:  group.WipeIntoModel,
+			InfillDensity:  group.InfillDensity,
 			BoundingBox:    group.BoundingBox,
 		})
 	}

@@ -36,6 +36,7 @@ type Bundle struct {
 	Extruders      []string    // 1-indexed ints
 	WipeIntoInfill []bool
 	WipeIntoModel  []bool
+	InfillDensity  []int
 	BoundingBox    util.BoundingBox
 
 	Config []byte
@@ -51,6 +52,7 @@ func NewBundle() Bundle {
 		Extruders:      make([]string, 0),
 		WipeIntoInfill: make([]bool, 0),
 		WipeIntoModel:  make([]bool, 0),
+		InfillDensity:  make([]int, 0),
 		BoundingBox:    util.NewBoundingBox(),
 	}
 }
@@ -103,6 +105,7 @@ func (b *Bundle) AddModel(model *Model) {
 	b.Extruders = append(b.Extruders, model.Extruder)
 	b.WipeIntoInfill = append(b.WipeIntoInfill, model.WipeIntoInfill)
 	b.WipeIntoModel = append(b.WipeIntoModel, model.WipeIntoModel)
+	b.InfillDensity = append(b.InfillDensity, model.InfillDensity)
 
 	b.BoundingBox.ExpandByBox(model.GetTransformedBbox())
 }

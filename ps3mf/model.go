@@ -21,6 +21,7 @@ type ModelOpts struct {
 	Extruder       string // 1-indexed
 	WipeIntoInfill bool
 	WipeIntoModel  bool
+	InfillDensity  int // [0..100], or -1 if not used
 }
 
 type Model struct {
@@ -32,6 +33,7 @@ type Model struct {
 	Extruder       string
 	WipeIntoInfill bool
 	WipeIntoModel  bool
+	InfillDensity  int
 }
 
 type xmlns struct {
@@ -85,6 +87,7 @@ func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (Model, error) {
 		Extruder:       opts.Extruder,
 		WipeIntoInfill: opts.WipeIntoInfill,
 		WipeIntoModel:  opts.WipeIntoModel,
+		InfillDensity:  -1,
 	}
 
 	// load the STL file using 3MF conversion
@@ -134,6 +137,8 @@ func STLtoModel(opts ModelOpts, filamentIds map[byte]byte) (Model, error) {
 		}
 		model.Supports = supports
 	}
+
+	model.InfillDensity = opts.InfillDensity
 
 	if err = file.Close(); err != nil {
 		return model, err

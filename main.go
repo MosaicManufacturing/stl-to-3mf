@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"mosaicmfg.com/stl-to-3mf/ps3mf"
 )
@@ -12,7 +13,7 @@ import (
 // stl-to-3mf outpath.3mf inpath.config filamentIdsJson <models>
 //
 //   <models>: <model> [<model> [...]]
-//   <model>:  [--colors colors.rle] [--supports supports.rle] name transforms extruder wipeIntoInfill wipeIntoModel model1.stl [...]
+//   <model>:  [--colors colors.rle] [--supports supports.rle] [--infill 15] name transforms extruder wipeIntoInfill wipeIntoModel model1.stl [...]
 
 type Opts struct {
 	Models      []ps3mf.ModelOpts
@@ -37,7 +38,9 @@ func getOpts() (Opts, error) {
 		opts.FilamentIDs = idsMap
 	}
 	for i := 3; i < argc; {
-		modelOpts := ps3mf.ModelOpts{}
+		modelOpts := ps3mf.ModelOpts{
+			InfillDensity: -1,
+		}
 		if argv[i] == "--colors" {
 			i++
 			modelOpts.ColorsPath = argv[i]
@@ -46,6 +49,15 @@ func getOpts() (Opts, error) {
 		if argv[i] == "--supports" {
 			i++
 			modelOpts.SupportsPath = argv[i]
+			i++
+		}
+		if argv[i] == "--infill" {
+			i++
+			density, err := strconv.Atoi(argv[i])
+			if err != nil {
+				return opts, err
+			}
+			modelOpts.InfillDensity = density
 			i++
 		}
 		modelOpts.Path = argv[i]
