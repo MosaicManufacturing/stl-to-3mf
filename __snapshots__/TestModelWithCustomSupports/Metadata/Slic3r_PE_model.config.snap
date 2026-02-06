@@ -18,6 +18,7 @@
    <metadata type="volume" key="source_offset_y" value="0"/>
    <metadata type="volume" key="source_offset_z" value="0"/>
    <metadata type="volume" key="extruder" value="1"/>
+   <metadata type="volume" key="fill_density" value="15%"/>
    <mesh edges_fixed="0" degenerate_facets="0" facets_removed="0" facets_reversed="0" backwards_edges="0"/>
   </volume>
  </object>

@@ -3,6 +3,7 @@ package ps3mf
 import (
 	"bytes"
 	"encoding/xml"
+	"fmt"
 	"path"
 	"strconv"
 )
@@ -85,6 +86,7 @@ func GetModelConfig(m *ModelXML, groupVolumeInfo []MergedVolumesInfo, outpath st
 		extruders := groupVolumeInfo[idx].Extruders
 		wipeIntoInfill := groupVolumeInfo[idx].WipeIntoInfill
 		wipeIntoModel := groupVolumeInfo[idx].WipeIntoModel
+		infillDensity := groupVolumeInfo[idx].InfillDensity
 		objectName := groupVolumeInfo[idx].ObjectName
 
 		objectConfig := ModelConfigObject{
@@ -100,24 +102,32 @@ func GetModelConfig(m *ModelXML, groupVolumeInfo []MergedVolumesInfo, outpath st
 		}
 
 		for volumeIndex, idPair := range idPairs {
+			volumeMetadata := []ModelConfigMeta{
+				GetModelConfigMeta("volume", "name", volumeNames[volumeIndex]),
+				GetModelConfigMeta("volume", "volume_type", "ModelPart"),
+				// use identity matrix since vertices are already transformed
+				GetModelConfigMeta("volume", "matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
+				GetModelConfigMeta("volume", "source_file", path.Base(outpath)),
+				GetModelConfigMeta("volume", "source_object_id", strconv.Itoa(volumeIndex)),
+				GetModelConfigMeta("volume", "source_volume_id", "0"),
+				GetModelConfigMeta("volume", "source_offset_x", "0"),
+				GetModelConfigMeta("volume", "source_offset_y", "0"),
+				GetModelConfigMeta("volume", "source_offset_z", "0"),
+				GetModelConfigMeta("volume", "extruder", extruders[volumeIndex]),
+			}
+			if infillDensity[volumeIndex] >= 0 {
+				densityStr := fmt.Sprintf("%d%%", infillDensity[volumeIndex])
+				volumeMetadata = append(
+					volumeMetadata,
+					GetModelConfigMeta("volume", "fill_density", densityStr),
+				)
+			}
 			objectConfig.Volume[volumeIndex] = ModelConfigVolume{
-				XMLName: xml.Name{},
-				FirstId: strconv.Itoa(idPair.FirstId),
-				LastId:  strconv.Itoa(idPair.LastId),
-				Metadata: []ModelConfigMeta{
-					GetModelConfigMeta("volume", "name", volumeNames[volumeIndex]),
-					GetModelConfigMeta("volume", "volume_type", "ModelPart"),
-					// use identity matrix since vertices are already transformed
-					GetModelConfigMeta("volume", "matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
-					GetModelConfigMeta("volume", "source_file", path.Base(outpath)),
-					GetModelConfigMeta("volume", "source_object_id", strconv.Itoa(volumeIndex)),
-					GetModelConfigMeta("volume", "source_volume_id", "0"),
-					GetModelConfigMeta("volume", "source_offset_x", "0"),
-					GetModelConfigMeta("volume", "source_offset_y", "0"),
-					GetModelConfigMeta("volume", "source_offset_z", "0"),
-					GetModelConfigMeta("volume", "extruder", extruders[volumeIndex]),
-				},
-				Mesh: GetModelConfigMesh(),
+				XMLName:  xml.Name{},
+				FirstId:  strconv.Itoa(idPair.FirstId),
+				LastId:   strconv.Itoa(idPair.LastId),
+				Metadata: volumeMetadata,
+				Mesh:     GetModelConfigMesh(),
 			}
 		}
 		config.Objects = append(config.Objects, objectConfig)

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"testing"
 
 	"github.com/gkampitakis/go-snaps/snaps"
@@ -89,6 +90,7 @@ func TestModelWithCustomSupports(t *testing.T) {
 	outPath := filepath.Join(testDir, "customSupport.3mf")
 	configPath := filepath.Join(testDir, "Slic3r_PE.config")
 	supportsPath := filepath.Join(testDir, "supports.rle")
+	infillDensity := 15
 	stlPath := filepath.Join(testDir, "supportTest.stl")
 	transform := "1.000000,0.000000,0.000000,0.000000|0.000000,1.000000,0.000000,0.000000|0.000000,0.000000,1.000000,0.000000|53.117386,28.125000,0.000000,1.000000"
 
@@ -99,6 +101,7 @@ func TestModelWithCustomSupports(t *testing.T) {
 		configPath,                // ConfigPath
 		`{"filamentIds":[[0,0]]}`, // FilamentIDs as string
 		"--supports", supportsPath,
+		"--infill", strconv.Itoa(infillDensity),
 		"|cube", // Model Name
 		transform,
 		"1", // Extruder
